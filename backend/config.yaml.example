@@ -1,0 +1,26 @@
+# EWS backend configuration (config.yaml). Copy to config.yaml and edit.
+# Lower precedence than real environment variables and .env.
+#
+# ANTI-CONFLICT with the live APRS backend on yg2ufh.mooo.com:8000:
+# EWS MUST use DIFFERENT resources so it never collides with APRS on the shared
+# broker. A shared MQTT_CLIENT_ID in particular would kick APRS off the broker.
+#   - MQTT_CLIENT_ID   = ews-web-backend   (NOT the APRS client id)
+#   - MQTT_TOPIC_PREFIX= yg2ufh/ews        (subscribes yg2ufh/ews/#)
+#   - HTTP_PORT        = 8001              (APRS owns 8000)
+#   - DB_PATH          = ./data/ews.db     (separate database file)
+
+MQTT_BROKER_HOST: yg2ufh.mooo.com
+MQTT_TOPIC_PREFIX: yg2ufh/ews
+MQTT_BROKER_PORT: 1883
+MQTT_CLIENT_ID: ews-web-backend
+# MQTT_USERNAME:
+# MQTT_PASSWORD:
+
+DB_PATH: ./data/ews.db
+HTTP_HOST: 0.0.0.0
+HTTP_PORT: 8001
+LOG_LEVEL: INFO
+
+HISTORY_LOOKBACK_HOURS: 24
+MISS_THRESHOLD_SEC: 180
+RETENTION_DAYS: 365
