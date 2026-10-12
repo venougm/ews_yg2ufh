@@ -1,15 +1,26 @@
 <!DOCTYPE html>
 <html lang="id">
 <head>
-    <meta charset="utf-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1" />
-    <title>YG2UFH EWS - Node</title>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Detail Node — EWS YG2UFH</title>
+  <link rel="stylesheet" href="/css/app.css" />
 </head>
 <body>
-    <!-- Placeholder served by the GET /node.html route. FEAT-002 populates the
-         per-node detail page (Chart.js tilt/weather/power charts, threshold
-         dashed lines, health stats). JS reads node_id from the URL query. -->
-    <h1>YG2UFH EWS - Node Detail</h1>
-    <p>Node detail page will be built by FEAT-002.</p>
+  <!-- Real per-node detail. Charts are fed by GET /api/nodes/{id},
+       /api/nodes/{id}/history and /api/thresholds (NOT localStorage). -->
+  <div class="topbar">
+    <span class="brand">YG2UFH</span>
+    <span class="title">Detail Perangkat</span>
+    <span class="spacer"></span>
+    <a class="back" href="/">← kembali ke dashboard</a>
+  </div>
+
+  <div class="wrap" id="content">
+    <div class="notfound">Memuat…</div>
+  </div>
+
+  <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
+  <script src="/js/node.js"></script>
 </body>
 </html>

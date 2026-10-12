@@ -1,15 +1,79 @@
 <!DOCTYPE html>
 <html lang="id">
 <head>
-    <meta charset="utf-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1" />
-    <title>YG2UFH EWS Dashboard</title>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>EWS YG2UFH — Dashboard</title>
+  <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"
+    integrity="sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY=" crossorigin="" />
+  <link rel="stylesheet" href="/css/app.css" />
 </head>
 <body>
-    <!-- Placeholder served by FEAT-001's StaticFiles mount. FEAT-002 populates
-         the real dashboard here (topbar, Leaflet map, node cards, alarm bar).
-         The marker string "YG2UFH" below is relied on by FEAT-001 verification. -->
-    <h1>YG2UFH EWS</h1>
-    <p>Dashboard will be built by FEAT-002.</p>
+  <!-- Real dashboard: all data comes from the FEAT-001 REST API + /ws/live
+       WebSocket (NOT localStorage, NOT the mockup files). -->
+  <div class="topbar">
+    <span class="brand">YG2UFH</span>
+    <span class="title">EWS Longsor</span>
+    <span class="spacer"></span>
+    <span><span class="status-dot dot-amber" id="brokerDot"></span><span class="dim" id="brokerText">menghubungkan…</span></span>
+    <span class="clock" id="clock">—</span>
+    <span class="userbox">👤 <b>operator</b>
+      <span class="role-badge role-operator" id="roleBadge">operator</span></span>
+  </div>
+
+  <div class="wrap">
+    <!-- Region filter — populated from GET /api/kabupaten + /kecamatan -->
+    <div class="filterbar">
+      <label for="selKab">Kabupaten</label>
+      <select class="sel" id="selKab"><option value="">Semua kabupaten</option></select>
+      <label for="selKec">Kecamatan</label>
+      <select class="sel" id="selKec"><option value="">Semua kecamatan</option></select>
+      <span class="spacer"></span>
+      <span class="dim" id="nodeCount">—</span>
+    </div>
+
+    <!-- Alarm banner (latest alarm summary) -->
+    <div class="banner hidden" id="banner">
+      <span class="status-dot dot-amber" id="bannerDot" style="width:14px;height:14px"></span>
+      <div>
+        <div style="font-weight:600" id="bannerTitle">—</div>
+        <div class="dim" style="font-size:12px" id="bannerSub">—</div>
+      </div>
+      <span class="spacer"></span>
+    </div>
+
+    <!-- Dashboard alarm bar (otomatis saat sensor melewati ambang; BUKAN sirine fisik) -->
+    <div class="alarm-bar hidden" id="alarmBar">
+      <span style="font-size:18px">🔔</span>
+      <span id="alarmBarText">—</span>
+      <button class="btn-mute" id="btnMute">🔊 Bisukan</button>
+    </div>
+
+    <!-- Node / gateway cards -->
+    <div class="grid-cards" id="cards"></div>
+    <div class="empty hidden" id="cardsEmpty">Belum ada node untuk filter ini.</div>
+
+    <!-- Map -->
+    <div class="grid-wide">
+      <div class="card">
+        <div class="map-head">
+          <h3 style="font-size:14px;margin:0">Peta Node</h3>
+        </div>
+        <div id="map" style="margin-top:10px"></div>
+        <div class="legend">● hijau = online · ● kuning = siaga · ● merah = offline/awas · ■ = gateway. Klik pin / kartu untuk detail.</div>
+      </div>
+
+      <!-- Alarm log (live, in-memory from WS) -->
+      <div class="log">
+        <h3>Riwayat Alarm &amp; Notifikasi</h3>
+        <div id="alarmLog"><div class="row">menunggu data…</div></div>
+      </div>
+    </div>
+  </div>
+
+  <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"
+    integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo=" crossorigin=""></script>
+  <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
+  <script src="/js/dashboard.js"></script>
 </body>
 </html>
