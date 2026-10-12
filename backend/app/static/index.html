@@ -29,6 +29,7 @@
       <label for="selKec">Kecamatan</label>
       <select class="sel" id="selKec"><option value="">Semua kecamatan</option></select>
       <span class="spacer"></span>
+      <button class="btn-thr" id="btnThr" title="Edit ambang tilt (SIAGA/AWAS)">⚙ Edit Ambang</button>
       <span class="dim" id="nodeCount">—</span>
     </div>
 
@@ -67,6 +68,33 @@
       <div class="log">
         <h3>Riwayat Alarm &amp; Notifikasi</h3>
         <div id="alarmLog"><div class="row">menunggu data…</div></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Modal edit ambang (threshold) — baca GET /api/thresholds, simpan PUT /api/thresholds -->
+  <div class="modal-overlay hidden" id="thrModal">
+    <div class="modal">
+      <h3>Edit Ambang Tilt</h3>
+      <div class="modal-sub">
+        Ambang memicu NOTIFIKASI alarm dashboard (bukan sirine fisik).
+        <br><b>Default global</b>; bisa di-override per node (scope <code>node:&lt;id&gt;</code>).
+        <span class="dim">Catatan: pembatasan admin menyusul di TAHAP 2 (auth).</span>
+      </div>
+
+      <label class="flabel" for="thrScope">Scope</label>
+      <select class="sel" id="thrScope" style="width:100%"></select>
+
+      <label class="flabel" for="thrSiaga">Ambang SIAGA (° tilt Δ)</label>
+      <input class="inp" id="thrSiaga" type="number" step="0.1" min="0" placeholder="2.0" />
+
+      <label class="flabel" for="thrAwas">Ambang AWAS (° tilt Δ)</label>
+      <input class="inp" id="thrAwas" type="number" step="0.1" min="0" placeholder="5.0" />
+
+      <div class="modal-err" id="thrErr"></div>
+      <div class="modal-actions">
+        <button class="btn-off" id="thrCancel">Tutup</button>
+        <button class="btn-primary" id="thrSave">Simpan</button>
       </div>
     </div>
   </div>

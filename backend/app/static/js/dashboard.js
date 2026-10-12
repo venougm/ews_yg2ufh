@@ -392,6 +392,73 @@ function connectWs() {
   };
 }
 
+/* ---------------- edit ambang (threshold) ---------------- */
+let thrCache = [];   // list dari GET /api/thresholds
+
+async function openThr() {
+  const err = document.getElementById("thrErr");
+  err.textContent = "";
+  try {
+    thrCache = await fetchJson("/api/thresholds");
+  } catch (e) {
+    thrCache = [{ scope: "global", tilt_siaga: 2.0, tilt_awas: 5.0 }];
+  }
+  // bangun daftar scope: global + tiap node yang dikenal (untuk override)
+  const sel = document.getElementById("thrScope");
+  sel.innerHTML = "";
+  const scopes = ["global", ...visibleNodes().map((n) => "node:" + n.node_id)];
+  for (const sc of scopes) {
+    const opt = document.createElement("option");
+    opt.value = sc;
+    opt.textContent = sc === "global" ? "Global (default semua node)" : sc;
+    sel.appendChild(opt);
+  }
+  fillThrFields("global");
+  document.getElementById("thrModal").classList.remove("hidden");
+}
+
+function fillThrFields(scope) {
+  const row = thrCache.find((r) => r.scope === scope);
+  const glob = thrCache.find((r) => r.scope === "global") || { tilt_siaga: 2.0, tilt_awas: 5.0 };
+  // untuk node tanpa override, tampilkan nilai global sebagai titik awal
+  document.getElementById("thrSiaga").value = (row ? row.tilt_siaga : glob.tilt_siaga);
+  document.getElementById("thrAwas").value = (row ? row.tilt_awas : glob.tilt_awas);
+}
+
+async function saveThr() {
+  const err = document.getElementById("thrErr");
+  const scope = document.getElementById("thrScope").value;
+  const siaga = parseFloat(document.getElementById("thrSiaga").value);
+  const awas = parseFloat(document.getElementById("thrAwas").value);
+  if (isNaN(siaga) || isNaN(awas)) { err.textContent = "Nilai ambang harus angka."; return; }
+  if (siaga <= 0 || awas <= 0) { err.textContent = "Ambang harus lebih dari 0."; return; }
+  if (awas <= siaga) { err.textContent = "Ambang AWAS harus lebih besar dari SIAGA."; return; }
+  try {
+    const r = await fetch("/api/thresholds", {
+      method: "PUT",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ scope, tilt_siaga: siaga, tilt_awas: awas }),
+    });
+    if (!r.ok) throw new Error("PUT -> " + r.status);
+    err.style.color = "var(--green)";
+    err.textContent = "Tersimpan. Ambang untuk " + scope + " = SIAGA " + siaga + "° / AWAS " + awas + "°.";
+    // refresh cache supaya pilihan scope lain ikut terbarui
+    thrCache = await fetchJson("/api/thresholds");
+    setTimeout(() => { err.style.color = ""; err.textContent = ""; }, 2500);
+  } catch (e) {
+    err.style.color = "";
+    err.textContent = "Gagal menyimpan: " + e.message;
+  }
+}
+
+function setupThr() {
+  document.getElementById("btnThr").addEventListener("click", openThr);
+  document.getElementById("thrCancel").addEventListener("click", () =>
+    document.getElementById("thrModal").classList.add("hidden"));
+  document.getElementById("thrSave").addEventListener("click", saveThr);
+  document.getElementById("thrScope").addEventListener("change", (e) => fillThrFields(e.target.value));
+}
+
 /* ---------------- wiring ---------------- */
 function setupFilters() {
   const selKab = document.getElementById("selKab");
@@ -412,6 +479,7 @@ async function init() {
   initMap();
   setupMute();
   setupFilters();
+  setupThr();
   await loadKabupaten();
   await loadNodes();
   connectWs();
