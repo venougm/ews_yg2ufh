@@ -152,6 +152,122 @@ dua port, dua subscription MQTT berbeda.
 Status: ini tahap "app beneran" NANTI. Sekarang EWS masih mockup HTML statis
 (dibuka dari file lokal, belum ada port/proses).
 
+### Backend EWS: JSON native, BUKAN APRS/aprslib (fix)
+- Backend EWS parse payload JSON langsung (lihat format di technical-design.md §4).
+- TIDAK memakai aprslib. Alasan: APRS/TNC2 format teks ringkas (posisi + telemetri
+  terbatas), tidak muat data EWS yang kaya (tilt, extensometer, pH, EPEVER, dll).
+- Library: paho-mqtt + json bawaan + FastAPI (pola mirip mqtt-server tapi tanpa aprslib).
+
+### CHECKLIST ANTI-BENTROK dengan APRS (`mqtt-server` :8000) — WAJIB
+APRS di `yg2ufh.mooo.com:8000` SUDAH JALAN NORMAL dan TIDAK BOLEH terganggu.
+EWS harus memakai sumber daya SENDIRI di tiap titik berikut:
+
+| Sumber daya      | APRS (sudah ada)      | EWS (harus BEDA)        |
+|------------------|-----------------------|-------------------------|
+| Port HTTP        | 8000                  | **8001**                |
+| MQTT client_id   | `aprs-web-backend`    | **`ews-web-backend`**   |
+| MQTT topic prefix| `aprs` (`aprs/#`)     | **`yg2ufh/ews` (`yg2ufh/ews/#`)** |
+| File database    | `./data/aprs.db`      | **`./data/ews.db`**     |
+| systemd service  | service APRS          | **`ews-web.service`**   |
+
+PALING KRITIKAL: **client_id MQTT**. Broker menendang klien kedua bila dua klien
+memakai client_id SAMA. Jika EWS pakai `aprs-web-backend`, APRS akan putus-nyambung.
+EWS WAJIB `ews-web-backend`.
+
+AMAN dibagi (tidak bentrok):
+- Broker MQTT yang sama (`yg2ufh.mooo.com:1883`) — dirancang melayani banyak klien.
+  APRS dengar `aprs/#`, EWS dengar `yg2ufh/ews/#`; tidak saling dengar.
+- Satu VPS yang sama — asal port beda & service name beda.
+
+Urutan deploy paling aman:
+1. Bangun backend EWS + simulator node, UJI LOKAL dulu (APRS di VPS tak tersentuh).
+2. Setelah terbukti, deploy ke VPS sebagai service TERPISAH (`ews-web.service`, :8001),
+   TANPA menyentuh file/service APRS.
+
+### Fitur tambahan yang diminta (BARU — perlu desain, belum dikerjakan)
+Dicatat agar tidak hilang. Perlu dibahas prioritas & tahapannya.
+
+1. **Edit threshold / ambang (toleransi) per node** — operator/admin bisa ubah ambang
+   tilt SIAGA/AWAS (dan ambang sensor lain) dari dashboard, bukan hardcode. Nilai
+   disimpan di backend. Selaras dgn keputusan "ambang dapat dikonfigurasi" di
+   technical-design §7. (Hak edit: kemungkinan admin; perlu dikonfirmasi.)
+2. **Edit suara alarm** — pilih/atur suara sirine yang nanti DIKIRIM ke alat (gateway)
+   via MQTT. Terkait rencana DFPlayer (suara custom per tingkat bahaya) di decisions.md
+   bagian "Suara sirine". Butuh: UI pilih pola/suara + perintah MQTT ke gateway.
+   CATATAN: tetap tunduk aturan "sirine hanya manual" — ini mengatur SUARA, bukan
+   memicu otomatis.
+3. **Retensi data >= 12 bulan** — data sensor yang diterima disimpan minimal 12 bulan
+   (untuk riwayat & laporan). Pengaruh ke desain DB (ukuran, indeks, mungkin
+   downsampling data lama). SQLite mungkin cukup; evaluasi saat implementasi.
+4. **Export laporan** — ekspor data (mis. CSV/PDF) per node/kabupaten/rentang waktu.
+5. **Pengelompokan dashboard per wilayah (hierarki)** — DIY punya 5 kabupaten/kota.
+   Hierarki: Provinsi DIY > Kabupaten/Kota > Kecamatan > Node.
+   - Menu "Tambah Kabupaten" dan "Tambah Kecamatan".
+   - Saat tambah/edit node, pilih node masuk kabupaten + kecamatan mana (grup).
+   - Dashboard bisa difilter/dikelompokkan per kabupaten (lalu per kecamatan).
+   - PENGARUH BESAR: `region` yang tadinya tunggal "sleman" jadi hierarki. Field node
+     bertambah: kabupaten + kecamatan. Pengaruh ke skema node_id, topic MQTT, DB,
+     dan UI dashboard. PERLU revisi technical-design (skema penamaan & topic).
+
+Status: REQUIREMENT dicatat; prioritas & tahap implementasi perlu diputuskan bersama.
+
+### Keputusan desain hierarki wilayah & fitur baru (fix sebagian)
+- **Skala**: Yogyakarta hanya CONTOH/preview. Sistem harus bisa dipakai daerah lain.
+  Hierarki wilayah dibuat GENERIK (tidak hardcode DIY/5 kabupaten):
+  Provinsi > Kabupaten/Kota > Kecamatan > Node. Provinsi & kabupaten bisa ditambah bebas.
+- **Topic MQTT**: `yg2ufh/ews/<kabupaten>/<node-id>/data`. Kecamatan = metadata di
+  payload/DB (tidak masuk topic, agar topic tidak terlalu dalam).
+- **node_id**: unik GLOBAL, pakai prefix kabupaten (mis. `slm-01`, `btl-01`).
+- **Threshold/ambang**: default GLOBAL, bisa OVERRIDE per node. Disimpan di backend,
+  bisa diedit dari dashboard (hak: admin — perlu konfirmasi final).
+- **Laporan**: export PDF saja (bukan CSV).
+- **Prefix `yg2ufh` (FIX, opsi a)**: dipertahankan sebagai PENANDA PEMILIK aplikasi
+  (yg2ufh = pemilik sistem), meski node dipasang di daerah lain. Topic tetap
+  `yg2ufh/ews/<kabupaten>/<node-id>/data`. Tidak diganti netral.
+- Retensi data: minimal 12 bulan (lihat requirement di atas).
+- Edit suara alarm: menyusul (butuh gateway + DFPlayer); tetap tunduk "sirine manual".
+
+### DUA jenis "alarm" — JANGAN tertukar (fix)
+1. **Sirine FISIK di lapangan** (relay di gateway): HANYA MANUAL. Tidak pernah otomatis.
+   (keputusan lama, tetap berlaku — hindari warga panik karena sensor error.)
+2. **Alarm DASHBOARD** (indikator untuk OPERATOR di layar): BOLEH OTOMATIS.
+   Saat nilai sensor melewati ambang: kartu node BERKEDIP (merah=AWAS, kuning=SIAGA),
+   browser mengeluarkan BUNYI beep (Web Audio, tanpa file), banner alarm menonjol,
+   + tombol BISUKAN (mute). Ini hanya menarik perhatian operator, BUKAN sirine fisik.
+   Alur: sensor buruk -> dashboard kedip+bunyi (otomatis) -> operator verifikasi ->
+   operator tekan sirine (manual) -> sirine fisik bunyi. Memperkuat "sirine manual",
+   bukan melanggar.
+
+### Fokus kerja: BACKEND + FRONTEND nyata (fix)
+- Berhenti menambal mockup statis. Bangun aplikasi FastAPI nyata (port 8001).
+- Mockup `docs/mockup/` = ARSIP/referensi desain (opsi a). Frontend produksi dibangun
+  BARU di `backend/app/static/`, mengambil desain dari mockup tapi ambil data dari API/WS.
+- Mosquitto lokal DILEWATI dulu (belum terpasang di PC user). Backend diuji lewat injeksi
+  langsung; demo end-to-end dgn broker belakangan (pakai mosquitto VPS saat deploy).
+
+#### Scope TAHAP 1 (fondasi inti — data node)
+Backend: config anti-bentrok EWS, DB (hierarki wilayah kabupaten/kecamatan + reading +
+threshold global/override + retensi 12 bulan), MQTT ingest JSON (bukan aprslib),
+REST API (nodes, kabupaten, kecamatan, history, thresholds), WebSocket realtime,
+deteksi node offline, simulator node (tools/simulate_node.py).
+Frontend (dari desain mockup, data dari API/WS): dashboard (peta Leaflet, kartu node/
+gateway, ALARM dashboard berkedip + beep + bisukan, filter per kabupaten/kecamatan),
+halaman detail node (grafik Chart.js dari API). RBAC UI (3 peran) boleh ikut tapi
+penegakan auth nyata = tahap 2.
+
+#### Database: SQLite dulu (fix)
+- Tahap sekarang pakai **SQLite** (`data/ews.db`). Alasan: APRS (mqtt-server) sudah
+  pakai & terbukti, tanpa server DB terpisah (satu file, mudah backup, tak nambah
+  hal yang bisa bentrok di VPS), cukup untuk skala node EWS (JSON kecil tiap 1 menit,
+  retensi 12 bulan tetap ringan).
+- **Upgrade ke PostgreSQL NANTI** bila skala besar (ratusan node / banyak penulisan
+  serentak / banyak operator). SQL mirip, migrasi tidak merombak total. Jangan
+  over-engineer sekarang.
+
+#### Scope TAHAP 2 (menyusul)
+Login & chat NYATA (user di DB, password di-hash, sesi aman) — bukan localStorage.
+Export laporan PDF. Edit suara alarm (kirim ke gateway). Deploy VPS (ews-web.service :8001).
+
 ### Jalur lanjut (BELUM dikerjakan — untuk login & chat yang beneran)
 Login & chat yang nyata WAJIB backend + penyimpanan. Dua opsi dicatat:
 - Python (FastAPI/Flask) + SQLite/PostgreSQL + MQTT client. (kandidat utama krn user sebut Python)

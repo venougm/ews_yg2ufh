@@ -16,11 +16,22 @@ Satu `.bin` untuk semua T-Beam. Peran dipilih saat setup (captive portal):
 
 ---
 
-## 2. Identitas & penamaan
+## 2. Identitas & penamaan (hierarki wilayah)
 
-- `region` = `sleman` (wilayah Yogyakarta/Sleman).
-- `node_id` = ID unik per perangkat. Usul: `node-01`, `node-02`, ... ; gateway `gw-01`.
-  Default dari chip ID ESP32, bisa di-override di captive portal.
+Sistem dirancang GENERIK — Yogyakarta hanya contoh, bisa dipakai daerah lain.
+Hierarki wilayah: **Provinsi > Kabupaten/Kota > Kecamatan > Node**.
+
+- `yg2ufh` = penanda PEMILIK aplikasi (bukan wilayah). Tetap dipakai meski node
+  dipasang di daerah lain.
+- `provinsi` = mis. `diy` (opsional di topic; disimpan sebagai metadata).
+- `kabupaten` = mis. `sleman`, `bantul`, `gunungkidul`, `kulonprogo`, `kotayogya`.
+  Bisa ditambah bebas (tidak hardcode). Masuk ke topic MQTT.
+- `kecamatan` = mis. `depok`, `kalasan`. METADATA di payload/DB (TIDAK di topic,
+  agar topic tidak terlalu dalam).
+- `node_id` = ID unik GLOBAL dengan **prefix kabupaten**: `slm-01`, `btl-01`,
+  `gk-01`, dst. Unik se-seluruh sistem (bukan hanya per kabupaten) agar tidak
+  bentrok. Gateway: `slm-gw-01`. Default dari chip ID ESP32, di-override di captive portal.
+- Saat FIRST FLASH, operator mengisi: kabupaten, kecamatan, node_id, koordinat, lokasi.
 - Satu "jaringan" ditandai `network_id` + frekuensi + (opsional) kata sandi LoRa,
   agar jaringan lain tidak saling mengganggu.
 
@@ -28,42 +39,45 @@ Satu `.bin` untuk semua T-Beam. Peran dipilih saat setup (captive portal):
 
 ## 3. Skema Topic MQTT
 
-Base: `yg2ufh/ews/<region>/<node_id>/...`
+Base: `yg2ufh/ews/<kabupaten>/<node_id>/...`
+(`yg2ufh` = pemilik; `<kabupaten>` = grup wilayah; kecamatan = metadata di payload.)
 
 ### Data sensor (gateway yang publish, retained=false)
 ```
-yg2ufh/ews/sleman/node-01/weather/temperature     -> 27.4
-yg2ufh/ews/sleman/node-01/weather/humidity        -> 82.1
-yg2ufh/ews/sleman/node-01/weather/pressure        -> 1008.3
-yg2ufh/ews/sleman/node-01/power/battery_voltage   -> 12.8
-yg2ufh/ews/sleman/node-01/power/pv_voltage        -> 18.2
-yg2ufh/ews/sleman/node-01/tilt/angle_x            -> 5.2   (opsional, bertahap)
+yg2ufh/ews/sleman/slm-01/weather/temperature     -> 27.4
+yg2ufh/ews/sleman/slm-01/weather/humidity        -> 82.1
+yg2ufh/ews/sleman/slm-01/weather/pressure        -> 1008.3
+yg2ufh/ews/sleman/slm-01/power/battery_voltage   -> 12.8
+yg2ufh/ews/sleman/slm-01/power/pv_voltage        -> 18.2
+yg2ufh/ews/sleman/slm-01/tilt/angle_x            -> 5.2   (opsional, bertahap)
 ```
 
 ### Payload gabungan (satu JSON per node, lebih hemat) — DIREKOMENDASIKAN
 ```
-yg2ufh/ews/sleman/node-01/data   -> { JSON lengkap, lihat section 4 }
+yg2ufh/ews/sleman/slm-01/data   -> { JSON lengkap, lihat section 4 }
 ```
 Dua gaya ini bisa dipakai bersamaan; gaya JSON gabungan jadi acuan utama,
 per-metric topic untuk kemudahan dashboard sederhana.
 
 ### Status & health
 ```
-yg2ufh/ews/sleman/node-01/status   -> "online" | "offline"   (retained=true)
-yg2ufh/ews/sleman/node-01/health   -> { rssi, uptime, batt, ... }
+yg2ufh/ews/sleman/slm-01/status   -> "online" | "offline"   (retained=true)
+yg2ufh/ews/sleman/slm-01/health   -> { rssi, uptime, batt, ... }
 ```
 
 ### Sirine (gateway)
 ```
-yg2ufh/ews/sleman/gw-01/siren/cmd     <- "ON" | "OFF" | "PATTERN:evac"   (dari dashboard)
-yg2ufh/ews/sleman/gw-01/siren/state   -> "on" | "off"                     (status aktual, retained=true)
+yg2ufh/ews/sleman/slm-gw-01/siren/cmd     <- "ON" | "OFF" | "PATTERN:evac"   (dari dashboard)
+yg2ufh/ews/sleman/slm-gw-01/siren/state   -> "on" | "off"                     (status aktual, retained=true)
 ```
 
 ### Alarm / Notifikasi EWS (otomatis dari deteksi; TIDAK memicu sirine)
 ```
-yg2ufh/ews/sleman/alarm   -> { level: "siaga|awas", source: "node-01", reason: "tilt delta>5deg", ts }
+yg2ufh/ews/sleman/alarm   -> { level: "siaga|awas", source: "slm-01", reason: "tilt delta>5deg", ts }
 ```
 Alarm ini hanya NOTIFIKASI untuk operator. Sirine tetap dibunyikan manual via `.../siren/cmd`.
+
+Backend subscribe `yg2ufh/ews/#` lalu memilah kabupaten & node_id dari topic/payload.
 
 ---
 
@@ -74,8 +88,10 @@ Nambah sensor = tambah field, gateway & dashboard tidak perlu diubah.
 
 ```json
 {
-  "id": "node-01",
-  "region": "sleman",
+  "id": "slm-01",
+  "provinsi": "diy",
+  "kabupaten": "sleman",
+  "kecamatan": "depok",
   "ts": 1760000000,
   "seq": 1234,
   "weather": { "temp": 27.4, "hum": 82.1, "press": 1008.3 },
@@ -89,7 +105,10 @@ Nambah sensor = tambah field, gateway & dashboard tidak perlu diubah.
 }
 ```
 
-Tahap awal (BME280 + EPEVER) hanya mengisi: `id, region, ts, seq, weather, power, health`.
+Catatan: `region` lama diganti hierarki `provinsi` + `kabupaten` + `kecamatan`.
+`kabupaten` juga ada di topic; `kecamatan` hanya di payload/DB.
+Tahap awal (BME280 + EPEVER) hanya mengisi:
+`id, provinsi, kabupaten, kecamatan, ts, seq, weather, power, health`.
 
 ---
 
@@ -225,3 +244,62 @@ RadioLib menangani keduanya, tinggal pilih driver yang benar saat setup.
 6. Uji end-to-end 1 node + 1 gateway, lalu 2 node.
 7. Web flasher YG2UFH (build .bin + manifest + halaman HTTPS).
 8. Tambah sensor bertahap: tilt, extensometer, pH, rain.
+
+---
+
+## 12. Backend dashboard EWS & fitur lanjutan
+
+Backend FastAPI terpisah dari APRS (lihat decisions.md "CHECKLIST ANTI-BENTROK"):
+port **8001**, client_id **`ews-web-backend`**, topik **`yg2ufh/ews/#`**, DB **`ews.db`**.
+Parse JSON native (BUKAN aprslib).
+
+### 12.1 Hierarki wilayah (grouping dashboard)
+- Model: **Provinsi > Kabupaten/Kota > Kecamatan > Node**. Generik, bisa ditambah bebas
+  (Yogyakarta hanya contoh; sistem dapat dipakai daerah lain).
+- Tabel DB: `kabupaten` (id, nama, provinsi), `kecamatan` (id, nama, kabupaten_id).
+  Node punya `kabupaten` + `kecamatan`.
+- Dashboard: menu "Tambah Kabupaten" & "Tambah Kecamatan" (hak admin). Saat tambah/edit
+  node, pilih kabupaten + kecamatan. Dashboard bisa difilter/dikelompokkan per kabupaten,
+  lalu per kecamatan.
+- node_id unik global dengan prefix kabupaten (mis. `slm-01`).
+
+### 12.2 Threshold / ambang (dapat dikonfigurasi)
+- Nilai ambang (tilt SIAGA/AWAS, dll.) disimpan di backend, BUKAN hardcode.
+- **Default global** + **override per node**. Resolusi: ambang node = override node bila
+  ada, selain itu pakai default global.
+- Dashboard: menu edit threshold (hak admin). Backend memakai nilai ini saat evaluasi
+  deteksi -> publish NOTIFIKASI/alarm (tetap TIDAK memicu sirine otomatis).
+- Simpan di tabel `thresholds` (scope: `global` atau `node:<id>`).
+
+### 12.3 Edit suara alarm (dikirim ke alat — menyusul)
+- Dashboard: pilih pola/suara sirine; backend kirim perintah ke gateway via MQTT
+  `yg2ufh/ews/<kabupaten>/<gw-id>/siren/cmd` (mis. `PATTERN:evac`).
+- Terkait DFPlayer (suara custom per tingkat bahaya) — lihat decisions.md.
+- TETAP tunduk aturan "sirine hanya manual": ini mengatur SUARA/pola, bukan auto-trigger.
+- Status: menyusul (butuh gateway + DFPlayer). Desain disiapkan, implementasi belakangan.
+
+### 12.4 Retensi data >= 12 bulan
+- Semua reading disimpan minimal **12 bulan** untuk riwayat & laporan.
+- DB: SQLite dengan indeks (node_id, ts). Evaluasi ukuran; bila perlu, downsample data
+  lama (mis. simpan rata-rata per jam untuk data > beberapa bulan) agar DB tak membengkak.
+- Tugas pembersihan periodik: hapus/arsipkan data lebih tua dari ambang retensi (configurable,
+  default 12 bulan).
+
+### 12.5 Export laporan PDF
+- Export **PDF** (bukan CSV) per node / kabupaten / rentang waktu.
+- Isi: ringkasan + grafik sensor + riwayat alarm pada periode terpilih.
+- Berguna untuk pelaporan ke pihak terkait (mis. BPBD).
+- Kandidat library: ReportLab atau WeasyPrint (TBD saat implementasi).
+
+### 12.6 REST API (rencana)
+```
+GET  /api/kabupaten                       -> daftar kabupaten
+GET  /api/kabupaten/{kab}/kecamatan       -> daftar kecamatan
+GET  /api/nodes?kabupaten=&kecamatan=     -> node (filter grup), latest reading
+GET  /api/nodes/{id}                      -> detail + latest
+GET  /api/nodes/{id}/history?hours=N      -> riwayat (grafik)
+GET  /api/thresholds                      -> global + override
+PUT  /api/thresholds                      -> set (admin)
+POST /api/report (kab/node, rentang) -> PDF
+WS   /ws                                  -> push realtime
+```

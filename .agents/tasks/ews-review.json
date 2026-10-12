@@ -1,0 +1,45 @@
+{
+  "verdict": "APPROVED",
+  "findings": [
+    {
+      "file": "docs/mockup/dashboard.html",
+      "note": "RESOLVED (prior pass concern). The archived mockups are now byte-identical to the committed originals: `git diff HEAD -- docs/mockup/dashboard.html docs/mockup/node.html` shows no changes and the only mockup-touching commit is the initial 55d41c8. The earlier CHANGES_REQUESTED about the mockup being edited no longer applies, and the dashboard-alarm UI lives only in backend/app/static/. FEAT-002's findings.verification_results.mockup_untouched claim is therefore now accurate."
+    },
+    {
+      "file": "backend/app/config.py",
+      "note": "Anti-conflict defaults verified: http_port=8001, mqtt_client_id='ews-web-backend', mqtt_topic_prefix='yg2ufh/ews' (subscribe '<prefix>/#'), db_path='./data/ews.db', miss_threshold_sec=180, retention_days=365. Matches decisions.md CHECKLIST ANTI-BENTROK and plan step 1."
+    },
+    {
+      "file": "backend/",
+      "note": "No aprslib anywhere: grep across backend/** returns zero matches; requirements.txt omits aprslib; ingest parses with native json.loads (mqtt_ingest.parse_payload). Matches decisions.md 'JSON native, BUKAN aprslib'."
+    },
+    {
+      "file": "backend/app/db.py",
+      "note": "Region hierarchy schema present and correct: tables kabupaten/kecamatan/nodes/readings/node_status/thresholds; readings indexed on (node_id, received_at, id); init_db seeds global threshold 2.0/5.0; resolve_threshold does node-override-else-global; purge_old_readings implements 12-month retention; get_stale_nodes backs offline detection. Matches technical-design.md §12.1/§12.2/§12.4 and §6."
+    },
+    {
+      "file": "backend/app/routers/*.py, backend/app/main.py",
+      "note": "All technical-design.md §12.6 endpoints exist: GET/POST /api/kabupaten, GET/POST /api/kabupaten/{kab}/kecamatan, GET /api/nodes (kabupaten+kecamatan filter) + POST /api/nodes, GET /api/nodes/{id} (404 on unknown), GET /api/nodes/{id}/history (ge=1 le=8760 => 12 months), GET/PUT /api/thresholds, WS /ws/live. No POST /api/report (PDF export correctly deferred to TAHAP 2). Lifespan runs offline-detection (~30s) + retention (~6h) tasks; a dead broker is caught and never crashes startup."
+    },
+    {
+      "file": "backend/app/static/js/dashboard.js, backend/app/static/js/node.js",
+      "note": "Frontend is fed entirely by REST + WS; zero localStorage (grep returns no matches). Dashboard alarm is automatic (card blink alarm-awas/alarm-siaga + Web Audio OscillatorNode beep + banner + MUTE), matching decisions.md 'DUA jenis alarm': dashboard alarm automatic, physical siren manual. No physical-siren control is wired, consistent with TAHAP 1 scope."
+    },
+    {
+      "file": "backend/tools/simulate_node.py",
+      "note": "Simulator client_id default is 'ews-node-sim' with an assert that it != 'ews-web-backend', preventing a broker client_id collision with the backend. Matches plan step 9."
+    },
+    {
+      "file": "backend/README.md",
+      "note": "Documents all four anti-conflict resources (port 8001 / ews-web-backend / yg2ufh/ews / ews.db), the 'never connect to the production broker yg2ufh.mooo.com in automated tests' rule, and an explicit TAHAP 2 exclusion note (real PDF export, real auth/login/chat, alarm-sound editing intentionally not built). Matches FEAT-003 acceptance criteria."
+    },
+    {
+      "file": "backend/tests/",
+      "note": "Test suite re-run during this review: 20 passed, 1 warning in ~5.7s (test_api, test_db, test_ingest_pipeline, test_offline, test_parse). Confirms the recorded FEAT evidence."
+    },
+    {
+      "file": ".agents/tasks/task-ews-tahap1/features/FEAT-001.json",
+      "note": "Minor evidence-wording nit (non-blocking, no change required): findings.verification_results.no_aprslib says 'aprslib only in docstrings/README stating it is NOT used', but the current tree has no 'aprslib' token under backend/ at all (even docstrings say 'NO aprslib' / 'no aprslib' without the bare token in a way grep for 'aprslib' still would not match the design intent). The substantive requirement (no aprslib usage) holds."
+    }
+  ]
+}

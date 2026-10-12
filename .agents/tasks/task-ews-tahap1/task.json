@@ -1,0 +1,7 @@
+{
+  "task_id": "task-ews-tahap1",
+  "task_description": "Build the EWS (landslide Early Warning System) FastAPI app TAHAP 1 — real backend + real frontend — in c:/aws-kiro/EWS_YG2UFH/backend. Backend subscribes to MQTT yg2ufh/ews/#, parses EWS node JSON natively (NEVER aprslib), stores to SQLite with a region hierarchy (kabupaten/kecamatan/nodes/readings/thresholds), serves the exact REST API from technical-design.md §12.6 plus a WebSocket, detects offline nodes, enforces 12-month retention, and ships a node simulator. Frontend is a real Leaflet dashboard (node/gateway cards, kabupaten/kecamatan filters, dashboard alarm blink + Web Audio beep + banner + mute) and a Chart.js node-detail page, both fed from the API/WS (NOT localStorage), styled from docs/mockup. Tested LOCALLY with no hardware and no external broker. CRITICAL anti-conflict with the live APRS backend on :8000: EWS MUST use port 8001, client_id ews-web-backend, topic prefix yg2ufh/ews, DB ./data/ews.db, and must never touch the mqtt-server folder. Real PDF export and real auth/login/chat and alarm-sound editing are TAHAP 2 — do NOT build them now.",
+  "status": "completed",
+  "feature_order": ["FEAT-001", "FEAT-002", "FEAT-003"],
+  "blocked_reason": null
+}
