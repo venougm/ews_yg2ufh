@@ -255,6 +255,13 @@ a { color: var(--blue); }
 }
 .btn-del:hover { background: #3a1a1a; }
 
+/* ---- node_id terkunci saat edit (identitas pencocokan MQTT, tak boleh ganti) ---- */
+.node-id-locked {
+  color: var(--dim);
+  background: #16191d;
+  cursor: not-allowed;
+}
+
 /* pesan saat sebuah grafik tidak punya data (field tidak dikirim node) */
 .chart-empty {
   position: absolute; inset: 0; display: flex; align-items: center; justify-content: center;

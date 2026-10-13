@@ -32,6 +32,9 @@
       <label for="selKec">Kecamatan</label>
       <select class="sel" id="selKec"><option value="">Semua kecamatan</option></select>
       <span class="spacer"></span>
+      <button class="btn-thr hidden" id="btnAddNode" title="Daftarkan node baru (admin)">+ Tambah Node</button>
+      <button class="btn-thr hidden" id="btnAddGateway" title="Daftarkan gateway baru (admin)">+ Tambah Gateway</button>
+      <button class="btn-user hidden" id="btnDevices" title="Kelola perangkat terdaftar (admin)">Perangkat Terdaftar</button>
       <button class="btn-thr" id="btnThr" title="Edit ambang tilt (SIAGA/AWAS)">⚙ Edit Ambang</button>
       <span class="dim" id="nodeCount">—</span>
     </div>
@@ -102,6 +105,87 @@
     </div>
   </div>
 
+  <!-- Node/Gateway form modal (admin only) — wired by nodes_admin.js.
+       Add  -> POST /api/nodes ; Edit -> PUT /api/nodes/{id} (node_id locked). -->
+  <div class="modal-overlay hidden" id="nodeModal">
+    <div class="modal" style="width:460px">
+      <h3 id="nodeTitle">Tambah Node</h3>
+      <div class="modal-sub">
+        Pendaftaran manual (bukan auto-discovery).
+        <span class="dim">node_id adalah identitas pencocokan data MQTT.</span>
+      </div>
+
+      <label class="flabel" for="nodeId">node_id</label>
+      <input class="inp" id="nodeId" type="text" placeholder="mis. slm-01" />
+      <div class="modal-sub" style="margin-top:4px">
+        <b>node_id HARUS sama persis dengan yang di-flash ke alat</b>
+        (case-sensitive). Tidak bisa diubah saat edit.
+      </div>
+
+      <label class="flabel" for="nodeNama">Nama</label>
+      <input class="inp" id="nodeNama" type="text" placeholder="mis. Sensor Lereng Utara" />
+
+      <label class="flabel" for="nodeTipe">Tipe</label>
+      <select class="sel" id="nodeTipe" style="width:100%">
+        <option value="node">node</option>
+        <option value="gateway">gateway</option>
+      </select>
+
+      <label class="flabel" for="nodeKab">Kabupaten/Kota</label>
+      <select class="sel" id="nodeKab" style="width:100%"><option value="">— pilih —</option></select>
+
+      <label class="flabel" for="nodeKec">Kecamatan</label>
+      <select class="sel" id="nodeKec" style="width:100%"><option value="">— pilih —</option></select>
+
+      <label class="flabel" for="nodeLat">Latitude</label>
+      <input class="inp" id="nodeLat" type="number" step="any" placeholder="mis. -7.70776" />
+
+      <label class="flabel" for="nodeLon">Longitude</label>
+      <input class="inp" id="nodeLon" type="number" step="any" placeholder="mis. 110.41006" />
+
+      <label class="flabel" for="nodeLokasi">Lokasi (deskripsi)</label>
+      <input class="inp" id="nodeLokasi" type="text" placeholder="mis. RT 02 / RW 05, Dusun …" />
+
+      <div class="modal-err" id="nodeErr"></div>
+      <div class="modal-actions">
+        <button class="btn-off" id="nodeCancel">Batal</button>
+        <button class="btn-primary" id="nodeSave">Simpan</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Perangkat Terdaftar panel (admin only) — wired by nodes_admin.js. -->
+  <div class="modal-overlay hidden" id="devicesModal">
+    <div class="modal" style="width:620px">
+      <h3>Perangkat Terdaftar</h3>
+      <div class="modal-sub">Daftar node &amp; gateway. Edit atau hapus pendaftaran.
+        Menghapus pendaftaran TIDAK menghapus riwayat data.</div>
+
+      <div class="users-list" id="devicesList"><div class="dim">Memuat…</div></div>
+
+      <label class="flabel">Tambah Kabupaten/Kota</label>
+      <div class="users-add">
+        <input class="inp" id="kabId" type="text" placeholder="id (mis. slm)" />
+        <input class="inp" id="kabNama" type="text" placeholder="nama" />
+        <input class="inp" id="kabProv" type="text" placeholder="provinsi" />
+        <button class="btn-thr" id="kabAdd" style="margin-right:0">+ Kab</button>
+      </div>
+
+      <label class="flabel">Tambah Kecamatan</label>
+      <div class="users-add">
+        <select class="sel" id="kecKab"><option value="">— kabupaten —</option></select>
+        <input class="inp" id="kecId" type="text" placeholder="id (mis. slm-depok)" />
+        <input class="inp" id="kecNama" type="text" placeholder="nama" />
+        <button class="btn-thr" id="kecAdd" style="margin-right:0">+ Kec</button>
+      </div>
+
+      <div class="modal-err" id="devicesErr"></div>
+      <div class="modal-actions">
+        <button class="btn-off" id="devicesClose">Tutup</button>
+      </div>
+    </div>
+  </div>
+
   <!-- Login overlay (KEBUTUHAN B) — shown by auth.js when GET /api/me says
        {authenticated:false}. Dashboard data loads only after a successful login. -->
   <div class="modal-overlay hidden" id="loginOverlay">
@@ -156,6 +240,7 @@
   <!-- auth.js + users.js load BEFORE dashboard.js: auth.js gates init(). -->
   <script src="/js/auth.js"></script>
   <script src="/js/users.js"></script>
+  <script src="/js/nodes_admin.js"></script>
   <script src="/js/dashboard.js"></script>
 </body>
 </html>

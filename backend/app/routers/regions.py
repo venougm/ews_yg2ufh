@@ -61,3 +61,57 @@ def post_kecamatan_route(kab: str, body: KecamatanOut):
         raise HTTPException(status_code=500, detail="internal error")
     # Reflect the path kabupaten in the response regardless of the body value.
     return KecamatanOut(id=body.id, nama=body.nama, kabupaten_id=kab)
+
+
+@router.delete("/kabupaten/{kab_id}", dependencies=[Depends(require_admin)])
+def delete_kabupaten_route(kab_id: str):
+    """Delete a kabupaten (admin only). Refuses with 409 while any kecamatan or
+    node still references it, so the region hierarchy is never left dangling."""
+    try:
+        kec_count = db.count_kecamatan_in_kabupaten(kab_id)
+        node_count = db.count_nodes_in_kabupaten(kab_id)
+    except Exception as e:
+        logger.error("DELETE /api/kabupaten/%s guard failed: %s", kab_id, e, exc_info=True)
+        raise HTTPException(status_code=500, detail="internal error")
+    if kec_count > 0 or node_count > 0:
+        raise HTTPException(
+            status_code=409,
+            detail="kabupaten masih dipakai kecamatan/node",
+        )
+    try:
+        removed = db.delete_kabupaten(kab_id)
+    except Exception as e:
+        logger.error("DELETE /api/kabupaten/%s failed: %s", kab_id, e, exc_info=True)
+        raise HTTPException(status_code=500, detail="internal error")
+    if removed == 0:
+        raise HTTPException(status_code=404, detail="kabupaten tidak ditemukan")
+    return {"ok": True}
+
+
+@router.delete("/kabupaten/{kab}/kecamatan/{kec_id}",
+               dependencies=[Depends(require_admin)])
+def delete_kecamatan_route(kab: str, kec_id: str):
+    """Delete a kecamatan (admin only). Refuses with 409 while any node still
+    references it. `kab` is part of the path for URL symmetry; deletion keys on
+    kec_id (globally unique)."""
+    try:
+        node_count = db.count_nodes_in_kecamatan(kec_id)
+    except Exception as e:
+        logger.error(
+            "DELETE /api/kabupaten/%s/kecamatan/%s guard failed: %s",
+            kab, kec_id, e, exc_info=True,
+        )
+        raise HTTPException(status_code=500, detail="internal error")
+    if node_count > 0:
+        raise HTTPException(status_code=409, detail="kecamatan masih dipakai node")
+    try:
+        removed = db.delete_kecamatan(kec_id)
+    except Exception as e:
+        logger.error(
+            "DELETE /api/kabupaten/%s/kecamatan/%s failed: %s",
+            kab, kec_id, e, exc_info=True,
+        )
+        raise HTTPException(status_code=500, detail="internal error")
+    if removed == 0:
+        raise HTTPException(status_code=404, detail="kecamatan tidak ditemukan")
+    return {"ok": True}

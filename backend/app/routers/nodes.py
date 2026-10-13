@@ -14,7 +14,7 @@ from fastapi import APIRouter, Depends, HTTPException, Query
 from app import db, mqtt_ingest
 from app.config import get_settings
 from app.deps import require_admin
-from app.schemas import HistoryPointOut, NodeOut
+from app.schemas import HistoryPointOut, NodeIn, NodeOut, NodeUpdateIn
 
 logger = logging.getLogger(__name__)
 
@@ -108,9 +108,18 @@ def get_nodes_route(
 
 @router.post("/nodes", response_model=NodeOut, status_code=201,
              dependencies=[Depends(require_admin)])
-def post_node_route(body: NodeOut):
-    """Manually register a node (coordinates/location/grouping). EWS uses manual
-    registration, not auto-discovery, for dashboard positions."""
+def post_node_route(body: NodeIn):
+    """Manually register a node (name/type/grouping/coordinates/location). EWS
+    uses manual registration, not auto-discovery, for dashboard positions. A
+    node_id that already has a registry row is rejected with 409; an ingest-only
+    node (seen via MQTT but never registered) may be promoted to a registry row."""
+    try:
+        existing = db.get_node(body.node_id)
+    except Exception as e:
+        logger.error("POST /api/nodes lookup failed: %s", e, exc_info=True)
+        raise HTTPException(status_code=500, detail="internal error")
+    if existing is not None:
+        raise HTTPException(status_code=409, detail="node_id sudah terdaftar")
     try:
         db.upsert_node(
             node_id=body.node_id,
@@ -120,6 +129,7 @@ def post_node_route(body: NodeOut):
             kecamatan_id=body.kecamatan,
             lat=body.lat,
             lon=body.lon,
+            lokasi=body.lokasi,
         )
         reg = db.get_node(body.node_id)
         latest = db.get_latest_per_node()
@@ -128,6 +138,54 @@ def post_node_route(body: NodeOut):
         logger.error("POST /api/nodes failed: %s", e, exc_info=True)
         raise HTTPException(status_code=500, detail="internal error")
     return _node_out(body.node_id, reg, latest_row)
+
+
+@router.put("/nodes/{node_id}", response_model=NodeOut,
+            dependencies=[Depends(require_admin)])
+def put_node_route(node_id: str, body: NodeUpdateIn):
+    """Edit a registered node. The node_id comes ONLY from the path and is
+    LOCKED (it is the MQTT-matching identity and must never change on edit); the
+    body carries the editable fields, each written unconditionally so blanking a
+    field is honored. If the node was ingest-only (no registry row yet) this
+    promotes it to a registry row."""
+    try:
+        db.update_node(
+            node_id=node_id,
+            nama=body.nama,
+            tipe=body.tipe,
+            kabupaten_id=body.kabupaten,
+            kecamatan_id=body.kecamatan,
+            lat=body.lat,
+            lon=body.lon,
+            lokasi=body.lokasi,
+        )
+        reg = db.get_node(node_id)
+        latest = db.get_latest_per_node()
+        latest_row = next((r for r in latest if r["node_id"] == node_id), None)
+    except Exception as e:
+        logger.error("PUT /api/nodes/%s failed: %s", node_id, e, exc_info=True)
+        raise HTTPException(status_code=500, detail="internal error")
+    return _node_out(node_id, reg, latest_row)
+
+
+@router.delete("/nodes/{node_id}", dependencies=[Depends(require_admin)])
+def delete_node_route(node_id: str):
+    """Unregister a node from the dashboard.
+
+    Removes ONLY the dashboard registration (`nodes` row) and its live
+    `node_status` row. Historical `readings` are intentionally LEFT intact so
+    the recorded time-series is never lost. This does not stop the physical
+    device: it keeps publishing to MQTT until it is powered off, and would
+    reappear as an ingest-only node if it sends again. Returns 404 when no
+    registry row exists for `node_id`."""
+    try:
+        removed = db.delete_node(node_id)
+    except Exception as e:
+        logger.error("DELETE /api/nodes/%s failed: %s", node_id, e, exc_info=True)
+        raise HTTPException(status_code=500, detail="internal error")
+    if removed == 0:
+        raise HTTPException(status_code=404, detail="node tidak ditemukan")
+    return {"ok": True}
 
 
 @router.get("/nodes/{node_id}", response_model=NodeOut)

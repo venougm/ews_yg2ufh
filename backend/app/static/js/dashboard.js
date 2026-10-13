@@ -533,8 +533,21 @@ function applyRbacVisibility(role) {
   const btnUsers = document.getElementById("btnUsers"); // user mgmt: admin only
   if (btnThr) btnThr.classList.toggle("hidden", !isAdmin);
   if (btnUsers) btnUsers.classList.toggle("hidden", !isAdmin);
+  // Node/gateway/region management (FEAT-002): admin only, same pattern.
+  ["btnAddNode", "btnAddGateway", "btnDevices"].forEach((id) => {
+    const el = document.getElementById(id);
+    if (el) el.classList.toggle("hidden", !isAdmin);
+  });
 }
 window.applyRbacVisibility = applyRbacVisibility;
+
+/* Refresh hooks consumed by nodes_admin.js after a mutation (map + cards +
+   filter dropdown refresh without a full page reload). Guarded by existence
+   checks on the caller side. */
+window.loadNodes = loadNodes;
+window.redrawMarkers = redrawMarkers;
+window.visibleNodes = visibleNodes;
+window.loadKabupaten = loadKabupaten;
 
 let _dashboardStarted = false;
 async function init() {

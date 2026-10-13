@@ -299,3 +299,19 @@ Keputusan teknologi backend DITUNDA sampai mockup disetujui.
 - Cari register map Modbus EPEVER sesuai model controller.
 - Uji jangkauan LoRa di lapangan (medan berpohon).
 - Dashboard: putuskan backend (Python FastAPI + SQLite vs Node.js) saat naik dari mockup ke app beneran.
+
+## Ide: bridge APRS -> EWS (untuk demo pakai data YG2UFH-10, OPSIONAL/nanti)
+Perangkat YG2UFH-10 (IGate LilyGo T-Beam) sudah kirim data cuaca ke proyek APRS
+(topik `aprs-igate/#`, format APRS/TNC2). Formatnya BEDA dari EWS (JSON di topik
+`yg2ufh/ews/#`), jadi EWS tidak bisa membacanya langsung.
+
+Tiga opsi menampilkan data YG2UFH-10 di EWS:
+1. MANUAL + simulator (demo tampilan): daftar node EWS di koordinat YG2UFH-10
+   (-7.70776, 110.41006) lalu isi datanya pakai simulator. Cepat, tapi data dummy.
+2. BRIDGE APRS->EWS (data asli): skrip kecil subscribe `aprs-igate/#`, parse cuaca
+   YG2UFH-10, ubah ke JSON EWS, publish ke `yg2ufh/ews/.../data`. Perlu kode baru +
+   parsing APRS (aprslib). Belum dibuat.
+3. Alat EWS beneran (T-Beam flash firmware EWS, kirim JSON) — tujuan akhir.
+
+Keputusan: untuk DEMO sekarang pakai opsi 1 (manual + simulator). Opsi 2 (bridge)
+dicatat sebagai fitur terpisah bila ingin data YG2UFH-10 asli masuk EWS.

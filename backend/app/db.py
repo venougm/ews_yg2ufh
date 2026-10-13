@@ -309,6 +309,145 @@ def list_nodes(kabupaten: str | None = None, kecamatan: str | None = None) -> li
     return [dict(zip(columns, row)) for row in rows]
 
 
+def update_node(
+    node_id: str,
+    nama: str | None = None,
+    tipe: str | None = None,
+    kabupaten_id: str | None = None,
+    kecamatan_id: str | None = None,
+    lat: float | None = None,
+    lon: float | None = None,
+    lokasi: str | None = None,
+) -> None:
+    """Edit a node's registration, writing EVERY editable column
+    UNCONDITIONALLY (unlike upsert_node's COALESCE), so an edit can blank a field
+    back to NULL. If a nodes row already exists it is UPDATEd in place; otherwise
+    a fresh row is INSERTed (promoting an ingest-only node to a registry row).
+    node_id itself is never modified -- it is the locked MQTT-matching identity."""
+    conn = _ensure_initialized()
+    with _db_lock:
+        cur = conn.cursor()
+        try:
+            cur.execute("BEGIN")
+            cur.execute("SELECT 1 FROM nodes WHERE node_id = ?", (node_id,))
+            exists = cur.fetchone() is not None
+            if exists:
+                cur.execute(
+                    """
+                    UPDATE nodes SET
+                        nama = ?, tipe = ?, kabupaten_id = ?, kecamatan_id = ?,
+                        lat = ?, lon = ?, lokasi = ?
+                    WHERE node_id = ?
+                    """,
+                    (nama, tipe, kabupaten_id, kecamatan_id, lat, lon, lokasi, node_id),
+                )
+            else:
+                created_at = datetime.now(timezone.utc).isoformat()
+                cur.execute(
+                    """
+                    INSERT INTO nodes
+                        (node_id, nama, tipe, kabupaten_id, kecamatan_id, lat, lon, lokasi, created_at)
+                    VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
+                    """,
+                    (node_id, nama, tipe, kabupaten_id, kecamatan_id, lat, lon, lokasi, created_at),
+                )
+            conn.commit()
+        except Exception:
+            conn.rollback()
+            raise
+
+
+def delete_node(node_id: str) -> int:
+    """Remove a node's dashboard registration and its node_status row in one
+    transaction. Historical `readings` rows are intentionally LEFT intact (the
+    time-series is preserved for audit/history). Returns the number of `nodes`
+    rows removed, so the router maps 0 -> 404."""
+    conn = _ensure_initialized()
+    with _db_lock:
+        cur = conn.cursor()
+        try:
+            cur.execute("BEGIN")
+            cur.execute("DELETE FROM nodes WHERE node_id = ?", (node_id,))
+            removed = cur.rowcount
+            cur.execute("DELETE FROM node_status WHERE node_id = ?", (node_id,))
+            conn.commit()
+        except Exception:
+            conn.rollback()
+            raise
+    return removed
+
+
+# ---------------------------------------------------------------------------
+# Region reference counts + delete (admin management)
+# ---------------------------------------------------------------------------
+
+def count_kecamatan_in_kabupaten(kabupaten_id: str) -> int:
+    conn = _ensure_initialized()
+    with _db_lock:
+        cur = conn.cursor()
+        cur.execute(
+            "SELECT COUNT(*) FROM kecamatan WHERE kabupaten_id = ?", (kabupaten_id,)
+        )
+        row = cur.fetchone()
+    return int(row[0]) if row else 0
+
+
+def count_nodes_in_kabupaten(kabupaten_id: str) -> int:
+    conn = _ensure_initialized()
+    with _db_lock:
+        cur = conn.cursor()
+        cur.execute(
+            "SELECT COUNT(*) FROM nodes WHERE kabupaten_id = ?", (kabupaten_id,)
+        )
+        row = cur.fetchone()
+    return int(row[0]) if row else 0
+
+
+def count_nodes_in_kecamatan(kecamatan_id: str) -> int:
+    conn = _ensure_initialized()
+    with _db_lock:
+        cur = conn.cursor()
+        cur.execute(
+            "SELECT COUNT(*) FROM nodes WHERE kecamatan_id = ?", (kecamatan_id,)
+        )
+        row = cur.fetchone()
+    return int(row[0]) if row else 0
+
+
+def delete_kabupaten(kab_id: str) -> int:
+    """Delete a kabupaten row. Returns rows removed (0 if not found). Reference
+    guarding is the router's job (refuse while kecamatan/nodes still point here)."""
+    conn = _ensure_initialized()
+    with _db_lock:
+        cur = conn.cursor()
+        try:
+            cur.execute("BEGIN")
+            cur.execute("DELETE FROM kabupaten WHERE id = ?", (kab_id,))
+            removed = cur.rowcount
+            conn.commit()
+        except Exception:
+            conn.rollback()
+            raise
+    return removed
+
+
+def delete_kecamatan(kec_id: str) -> int:
+    """Delete a kecamatan row. Returns rows removed (0 if not found). Reference
+    guarding (nodes still pointing here) is the router's job."""
+    conn = _ensure_initialized()
+    with _db_lock:
+        cur = conn.cursor()
+        try:
+            cur.execute("BEGIN")
+            cur.execute("DELETE FROM kecamatan WHERE id = ?", (kec_id,))
+            removed = cur.rowcount
+            conn.commit()
+        except Exception:
+            conn.rollback()
+            raise
+    return removed
+
+
 # ---------------------------------------------------------------------------
 # Readings + status
 # ---------------------------------------------------------------------------
