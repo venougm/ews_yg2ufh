@@ -268,6 +268,27 @@ penegakan auth nyata = tahap 2.
 Login & chat NYATA (user di DB, password di-hash, sesi aman) — bukan localStorage.
 Export laporan PDF. Edit suara alarm (kirim ke gateway). Deploy VPS (ews-web.service :8001).
 
+#### Auth login = TINGKAT A (fix) — dikerjakan sekarang (bagian awal TAHAP 2)
+Keputusan: pakai "login dasar yang benar", BUKAN sekadar hash.
+- Password di-**hash bcrypt** di DB (passlib/bcrypt). Tidak pernah simpan plaintext.
+- **Session cookie** httpOnly (login beneran) — bukan pura-pura di klien.
+- **Proteksi endpoint**: endpoint yang MENGUBAH data (POST/PUT/DELETE nodes, kabupaten,
+  kecamatan, thresholds) WAJIB login. Endpoint lihat (GET) boleh terbuka untuk sekarang.
+- **RBAC 3 peran ditegakkan di BACKEND** (bukan cuma sembunyikan tombol di UI):
+  monitor = lihat; operator = lihat + sirine; admin = semua + kelola user + tambah/
+  edit/hapus node/gateway/kabupaten/kecamatan + edit threshold.
+- Endpoint auth: POST /api/login, POST /api/logout, GET /api/me. User disimpan di tabel
+  `users` (username, password_hash, role). Seed admin awal via env/CLI (bukan hardcode).
+- Frontend: halaman/overlay login nyata memanggil /api/login; UI sembunyikan aksi sesuai
+  peran dari GET /api/me (UI = kenyamanan; backend = penegak sebenarnya).
+
+#### HTTPS (syarat sebelum PRODUKSI, belum sekarang)
+- Untuk UJI/deploy awal: boleh HTTP polos di :8001 (login jalan tapi belum terenkripsi
+  di jaringan — JANGAN dipakai untuk password sungguhan di internet publik).
+- Sebelum dipakai publik beneran: WAJIB HTTPS. Caranya reverse proxy (Nginx/Caddy) +
+  Let's Encrypt. Ini sedikit menggeser keputusan "pisah port" — ditinjau saat naik ke
+  produksi. Dicatat sebagai syarat keamanan, bukan opsional.
+
 ### Jalur lanjut (BELUM dikerjakan — untuk login & chat yang beneran)
 Login & chat yang nyata WAJIB backend + penyimpanan. Dua opsi dicatat:
 - Python (FastAPI/Flask) + SQLite/PostgreSQL + MQTT client. (kandidat utama krn user sebut Python)
