@@ -26,7 +26,7 @@ def client():
     os.environ["MQTT_TOPIC_PREFIX"] = "yg2ufh/ews"
     os.environ["DB_PATH"] = ":memory:"
     os.environ["EWS_SEED_DEMO_USERS"] = "true"
-    os.environ["EWS_ADMIN_PASSWORD"] = "admin123"
+    os.environ["EWS_ADMIN_PASSWORD"] = "test-admin-pw"
     os.environ["SESSION_SECRET"] = "test-secret"
 
     from app.config import reset_settings_cache
@@ -66,7 +66,7 @@ def _register_node(client, node_id="slm-01", **overrides):
 # ---------------------------------------------------------------------------
 
 def test_post_node_full_fields_roundtrip(client):
-    assert _login(client, "admin", "admin123").status_code == 200
+    assert _login(client, "admin", "test-admin-pw").status_code == 200
 
     assert _register_node(client).status_code == 201
 
@@ -89,20 +89,20 @@ def test_post_node_full_fields_roundtrip(client):
 
 
 def test_post_duplicate_node_id_409(client):
-    assert _login(client, "admin", "admin123").status_code == 200
+    assert _login(client, "admin", "test-admin-pw").status_code == 200
     assert _register_node(client).status_code == 201
     # Second registration of the same node_id -> 409.
     assert _register_node(client).status_code == 409
 
 
 def test_post_node_rejects_empty_node_id(client):
-    assert _login(client, "admin", "admin123").status_code == 200
+    assert _login(client, "admin", "test-admin-pw").status_code == 200
     r = client.post("/api/nodes", json={"node_id": "   "})
     assert r.status_code == 422
 
 
 def test_post_node_rejects_out_of_range_coords(client):
-    assert _login(client, "admin", "admin123").status_code == 200
+    assert _login(client, "admin", "test-admin-pw").status_code == 200
     assert _register_node(client, node_id="bad-lat", lat=200.0).status_code == 422
     assert _register_node(client, node_id="bad-lon", lon=-999.0).status_code == 422
 
@@ -119,7 +119,7 @@ def test_post_node_rbac(client):
 # ---------------------------------------------------------------------------
 
 def test_put_node_edits_fields(client):
-    assert _login(client, "admin", "admin123").status_code == 200
+    assert _login(client, "admin", "test-admin-pw").status_code == 200
     assert _register_node(client).status_code == 201
 
     r = client.put(
@@ -146,7 +146,7 @@ def test_put_node_edits_fields(client):
 
 
 def test_put_node_id_is_locked_to_path(client):
-    assert _login(client, "admin", "admin123").status_code == 200
+    assert _login(client, "admin", "test-admin-pw").status_code == 200
     assert _register_node(client).status_code == 201
 
     # Body cannot carry node_id (NodeUpdateIn has no such field); the path wins.
@@ -163,7 +163,7 @@ def test_put_node_id_is_locked_to_path(client):
 
 def test_put_node_promotes_ingest_only(client):
     # A node that was never registered can be promoted via PUT.
-    assert _login(client, "admin", "admin123").status_code == 200
+    assert _login(client, "admin", "test-admin-pw").status_code == 200
     r = client.put("/api/nodes/ingest-9", json={"nama": "Promoted", "lat": -7.0, "lon": 110.0})
     assert r.status_code == 200
     r = client.get("/api/nodes/ingest-9")
@@ -172,7 +172,7 @@ def test_put_node_promotes_ingest_only(client):
 
 
 def test_put_node_rbac(client):
-    assert _login(client, "admin", "admin123").status_code == 200
+    assert _login(client, "admin", "test-admin-pw").status_code == 200
     assert _register_node(client).status_code == 201
     client.post("/api/logout")
 
@@ -189,7 +189,7 @@ def test_put_node_rbac(client):
 # ---------------------------------------------------------------------------
 
 def test_delete_node_removes_registration(client):
-    assert _login(client, "admin", "admin123").status_code == 200
+    assert _login(client, "admin", "test-admin-pw").status_code == 200
     assert _register_node(client).status_code == 201
 
     assert client.delete("/api/nodes/slm-01").status_code == 200
@@ -202,7 +202,7 @@ def test_delete_node_removes_registration(client):
 def test_delete_node_retains_readings(client):
     from app import db
 
-    assert _login(client, "admin", "admin123").status_code == 200
+    assert _login(client, "admin", "test-admin-pw").status_code == 200
     assert _register_node(client, node_id="hist-01").status_code == 201
 
     # Store a reading directly (no broker) so there is history to preserve.
@@ -220,12 +220,12 @@ def test_delete_node_retains_readings(client):
 
 
 def test_delete_node_unknown_404(client):
-    assert _login(client, "admin", "admin123").status_code == 200
+    assert _login(client, "admin", "test-admin-pw").status_code == 200
     assert client.delete("/api/nodes/nope").status_code == 404
 
 
 def test_delete_node_rbac(client):
-    assert _login(client, "admin", "admin123").status_code == 200
+    assert _login(client, "admin", "test-admin-pw").status_code == 200
     assert _register_node(client).status_code == 201
     client.post("/api/logout")
 
@@ -251,7 +251,7 @@ def test_region_post_rbac(client):
     client.post("/api/logout")
 
     # admin -> 201.
-    assert _login(client, "admin", "admin123").status_code == 200
+    assert _login(client, "admin", "test-admin-pw").status_code == 200
     assert client.post("/api/kabupaten", json=kab).status_code == 201
     assert client.post("/api/kabupaten/sleman/kecamatan", json=kec).status_code == 201
 
@@ -261,7 +261,7 @@ def test_region_post_rbac(client):
 # ---------------------------------------------------------------------------
 
 def test_delete_kabupaten_guard_and_success(client):
-    assert _login(client, "admin", "admin123").status_code == 200
+    assert _login(client, "admin", "test-admin-pw").status_code == 200
     assert client.post(
         "/api/kabupaten", json={"id": "sleman", "nama": "Sleman", "provinsi": "diy"}
     ).status_code == 201
@@ -282,7 +282,7 @@ def test_delete_kabupaten_guard_and_success(client):
 
 
 def test_delete_kecamatan_guard_when_node_present(client):
-    assert _login(client, "admin", "admin123").status_code == 200
+    assert _login(client, "admin", "test-admin-pw").status_code == 200
     assert client.post(
         "/api/kabupaten", json={"id": "sleman", "nama": "Sleman", "provinsi": "diy"}
     ).status_code == 201

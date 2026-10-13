@@ -22,7 +22,7 @@ def client():
     os.environ["MQTT_TOPIC_PREFIX"] = "yg2ufh/ews"
     os.environ["DB_PATH"] = ":memory:"
     os.environ["EWS_SEED_DEMO_USERS"] = "true"
-    os.environ["EWS_ADMIN_PASSWORD"] = "admin123"
+    os.environ["EWS_ADMIN_PASSWORD"] = "test-admin-pw"
     os.environ["SESSION_SECRET"] = "test-secret"
 
     from app.config import reset_settings_cache
@@ -94,7 +94,7 @@ def test_user_db_crud(fresh_db):
 # ---------------------------------------------------------------------------
 
 def test_login_success_sets_cookie(client):
-    r = _login(client, "admin", "admin123")
+    r = _login(client, "admin", "test-admin-pw")
     assert r.status_code == 200
     body = r.json()
     assert body["username"] == "admin"
@@ -151,7 +151,7 @@ def test_thresholds_put_rbac(client):
     client.post("/api/logout")
 
     # admin -> 200.
-    assert _login(client, "admin", "admin123").status_code == 200
+    assert _login(client, "admin", "test-admin-pw").status_code == 200
     assert client.put("/api/thresholds", json=payload).status_code == 200
 
 
@@ -170,7 +170,7 @@ def test_nodes_and_regions_post_rbac(client):
     client.post("/api/logout")
 
     # admin -> 201.
-    assert _login(client, "admin", "admin123").status_code == 200
+    assert _login(client, "admin", "test-admin-pw").status_code == 200
     assert client.post("/api/nodes", json=node).status_code == 201
     assert client.post("/api/kabupaten", json=kab).status_code == 201
     assert client.post(
@@ -201,7 +201,7 @@ def test_user_management_flow(client):
     client.post("/api/logout")
 
     # Admin can manage users.
-    assert _login(client, "admin", "admin123").status_code == 200
+    assert _login(client, "admin", "test-admin-pw").status_code == 200
 
     r = client.post("/api/users", json={"username": "carol", "password": "pw", "role": "operator"})
     assert r.status_code == 201
@@ -256,7 +256,7 @@ def test_seed_demo_users(fresh_db):
     from app import auth_seed
 
     settings = SimpleNamespace(
-        admin_user="admin", admin_password="admin123", seed_demo_users=True
+        admin_user="admin", admin_password="test-admin-pw", seed_demo_users=True
     )
     auth_seed.seed_users(settings)
 

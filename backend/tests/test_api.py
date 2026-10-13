@@ -19,7 +19,7 @@ def client():
     os.environ["DB_PATH"] = ":memory:"
     # Auth 'Tingkat A' makes the mutating endpoints admin-only; seed a known
     # admin so the tests below can log in before POST/PUT.
-    os.environ["EWS_ADMIN_PASSWORD"] = "admin123"
+    os.environ["EWS_ADMIN_PASSWORD"] = "test-admin-pw"
     os.environ["SESSION_SECRET"] = "test-secret"
 
     from app.config import reset_settings_cache
@@ -33,7 +33,7 @@ def client():
 
 
 def _login_admin(client):
-    r = client.post("/api/login", json={"username": "admin", "password": "admin123"})
+    r = client.post("/api/login", json={"username": "admin", "password": "test-admin-pw"})
     assert r.status_code == 200
 
 
