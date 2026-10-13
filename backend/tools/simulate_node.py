@@ -63,10 +63,15 @@ def _build_payload(node: dict, seq: int, force_alarm: bool) -> dict:
             "hum": round(random.uniform(60.0, 95.0), 1),
             "press": round(random.uniform(1005.0, 1012.0), 1),
         },
+        # EPEVER: tegangan aki (batt_v), tegangan solar/PV (pv_v), penggunaan daya
+        # (load_a), kapasitas aki (soc). load_a di-kirim HANYA oleh slm-01 untuk
+        # mendemokan "field opsional": slm-02 tidak mengirimnya, jadi di dashboard
+        # 'Beban' tidak muncul untuk slm-02 tapi muncul untuk slm-01.
         "power": {
             "batt_v": round(random.uniform(12.0, 13.2), 2),
             "pv_v": round(random.uniform(15.0, 19.0), 1),
             "soc": random.randint(70, 100),
+            **({"load_a": round(random.uniform(0.2, 1.5), 2)} if node["id"] == "slm-01" else {}),
         },
         "health": {
             "rssi": random.randint(-110, -80),

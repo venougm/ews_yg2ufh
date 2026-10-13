@@ -221,3 +221,10 @@ a { color: var(--blue); }
   flex: 1; background: #1a1d22; border: 1px solid var(--border); color: var(--dim);
   border-radius: 8px; padding: 10px; font-weight: 600; font-size: 13px; cursor: pointer;
 }
+
+/* pesan saat sebuah grafik tidak punya data (field tidak dikirim node) */
+.chart-empty {
+  position: absolute; inset: 0; display: flex; align-items: center; justify-content: center;
+  color: var(--dim); font-size: 13px;
+}
+.chart-empty.hidden { display: none; }

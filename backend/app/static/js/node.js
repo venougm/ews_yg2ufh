@@ -131,12 +131,14 @@ function renderNode(node, history, thr) {
       <div class="card">
         <h3>Cuaca (BME280)</h3>
         <div class="csub">suhu · kelembapan · tekanan</div>
-        <div class="chartbox"><canvas id="cWeather"></canvas></div>
+        <div class="chartbox"><canvas id="cWeather"></canvas>
+          <div class="chart-empty hidden" id="weatherEmpty">Belum ada data cuaca.</div></div>
       </div>
       <div class="card">
         <h3>Daya (EPEVER)</h3>
-        <div class="csub">tegangan baterai & panel surya</div>
-        <div class="chartbox"><canvas id="cPower"></canvas></div>
+        <div class="csub">tegangan aki · tegangan solar (PV) · beban</div>
+        <div class="chartbox"><canvas id="cPower"></canvas>
+          <div class="chart-empty hidden" id="powerEmpty">Belum ada data daya.</div></div>
       </div>
       <div class="card">
         <h3>Kesehatan Perangkat</h3>
@@ -167,24 +169,52 @@ function renderNode(node, history, thr) {
       y: { min: 0, max: yMax, ticks: { color: COLORS.dim, font: { size: 10 } }, grid: { color: GRID } },
   }});
 
-  // Weather.
-  line(document.getElementById("cWeather"), L, [
-    { label: "Suhu (°C)", data: pick(history, ["weather", "temp"]), borderColor: COLORS.red },
-    { label: "Lembap (%)", data: pick(history, ["weather", "hum"]), borderColor: COLORS.blue },
-    { label: "Tekanan (hPa)", data: pick(history, ["weather", "press"]), borderColor: COLORS.dim },
-  ]);
+  // Weather — hanya garis yang punya data yang digambar.
+  const wTemp = pick(history, ["weather", "temp"]);
+  const wHum = pick(history, ["weather", "hum"]);
+  const wPress = pick(history, ["weather", "press"]);
+  const weatherSets = [
+    { label: "Suhu (°C)", data: wTemp, borderColor: COLORS.red },
+    { label: "Lembap (%)", data: wHum, borderColor: COLORS.blue },
+    { label: "Tekanan (hPa)", data: wPress, borderColor: COLORS.dim },
+  ].filter((d) => hasData(d.data));
+  renderChartOrEmpty("cWeather", "weatherEmpty", L, weatherSets);
 
-  // Power.
-  line(document.getElementById("cPower"), L, [
-    { label: "Baterai (V)", data: pick(history, ["power", "batt_v"]), borderColor: COLORS.green },
-    { label: "PV (V)", data: pick(history, ["power", "pv_v"]), borderColor: COLORS.amber },
-  ]);
+  // Power (EPEVER): baterai (batt_v), solar cell (pv_v), beban/penggunaan daya (load_a).
+  // Field yang tidak pernah dikirim node TIDAK digambar.
+  const pBatt = pick(history, ["power", "batt_v"]);
+  const pPv = pick(history, ["power", "pv_v"]);
+  const pLoad = pick(history, ["power", "load_a"]);
+  const powerSets = [
+    { label: "Baterai (V)", data: pBatt, borderColor: COLORS.green },
+    { label: "PV / solar (V)", data: pPv, borderColor: COLORS.amber },
+    { label: "Beban (A)", data: pLoad, borderColor: COLORS.blue },
+  ].filter((d) => hasData(d.data));
+  renderChartOrEmpty("cPower", "powerEmpty", L, powerSets);
 
   // RSSI.
   line(document.getElementById("cRssi"), L, [
     { label: "RSSI (dBm)", data: pick(history, ["health", "rssi"]), borderColor: COLORS.blue,
       backgroundColor: "rgba(47,129,247,.08)", fill: true },
   ]);
+}
+
+/* true jika seri punya minimal satu nilai angka (bukan semua null) */
+function hasData(arr) { return Array.isArray(arr) && arr.some((v) => v != null); }
+
+/* Gambar chart hanya jika ada dataset berisi; jika tidak, tampilkan pesan
+   "belum ada data" dan sembunyikan canvas-nya (data tidak ada = tidak tampil). */
+function renderChartOrEmpty(canvasId, emptyId, labels, datasets) {
+  const canvas = document.getElementById(canvasId);
+  const empty = document.getElementById(emptyId);
+  if (!datasets.length) {
+    if (canvas) canvas.style.display = "none";
+    if (empty) empty.classList.remove("hidden");
+    return;
+  }
+  if (canvas) canvas.style.display = "";
+  if (empty) empty.classList.add("hidden");
+  line(canvas, labels, datasets);
 }
 
 function fmt(v, unit) { return v == null ? "—" : `${v}${unit || ""}`; }

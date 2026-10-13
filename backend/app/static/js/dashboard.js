@@ -67,15 +67,24 @@ function statusLabel(st) {
 }
 
 function fmtWeather(p) {
+  // Hanya tampilkan field cuaca yang dikirim node; yang kosong disembunyikan.
   const w = (p && p.weather) || {};
-  if (w.temp == null && w.hum == null && w.press == null) return "—";
-  return `${w.temp ?? "–"}°C · ${w.hum ?? "–"}% · ${w.press ?? "–"} hPa`;
+  const parts = [];
+  if (w.temp != null) parts.push(`${w.temp}°C`);
+  if (w.hum != null) parts.push(`${w.hum}%`);
+  if (w.press != null) parts.push(`${w.press} hPa`);
+  return parts.length ? parts.join(" · ") : "—";
 }
 function fmtPower(p) {
+  // EPEVER: tampilkan hanya field yang DIKIRIM node. Field yang tidak ada
+  // (null/undefined) tidak ditampilkan sama sekali — bukan "–".
   const pw = (p && p.power) || {};
-  if (pw.batt_v == null && pw.pv_v == null) return "—";
-  const soc = pw.soc != null ? ` · ${pw.soc}%` : "";
-  return `Batt ${pw.batt_v ?? "–"} V · PV ${pw.pv_v ?? "–"} V${soc}`;
+  const parts = [];
+  if (pw.batt_v != null) parts.push(`Batt ${pw.batt_v} V`);   // tegangan aki
+  if (pw.pv_v != null) parts.push(`PV ${pw.pv_v} V`);         // tegangan solar cell
+  if (pw.load_a != null) parts.push(`Beban ${pw.load_a} A`);  // penggunaan daya
+  if (pw.soc != null) parts.push(`${pw.soc}%`);               // kapasitas aki
+  return parts.length ? parts.join(" · ") : "—";
 }
 function tiltValue(p) {
   const t = (p && p.tilt) || {};
