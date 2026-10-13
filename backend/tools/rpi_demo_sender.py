@@ -22,6 +22,7 @@ from __future__ import annotations
 import argparse
 import json
 import os
+import random
 import subprocess
 import time
 
@@ -91,13 +92,29 @@ def uptime_sec() -> int | None:
 def build_payload(seq: int) -> dict:
     """Opsi 1: petakan data Raspi ke field EWS supaya kartu dashboard terisi.
     - weather.temp  <- suhu CPU (°C)   (demo: dipakai sebagai 'suhu')
+    - weather.hum   <- beban CPU (%)   (demo: dipakai sebagai 'kelembapan')
     - power.soc     <- 100 - RAM used% (demo: sisa RAM sebagai 'kapasitas')
-    - health        <- rssi dummy + uptime + fw
-    Field yang tak terbaca tidak dikirim (skema field-opsional)."""
+    - tilt.delta    <- nilai demo kecil (biar kartu Tilt terisi)
+    - health        <- uptime + fw
+
+    FALLBACK: jika dijalankan di mesin yang BUKAN Raspi (mis. server, tanpa
+    /sys/class/thermal), nilai sensor tak terbaca diganti angka dummy realistis
+    supaya kartu dashboard tetap terisi untuk DEMO. Di Raspi asli, nilai asli
+    yang dipakai (fallback tidak kepakai)."""
     temp = cpu_temp_c()
     load = cpu_load_pct()
     mem = mem_used_pct()
     up = uptime_sec()
+
+    # Fallback dummy untuk demo di non-Raspi.
+    if temp is None:
+        temp = round(random.uniform(45.0, 60.0), 1)   # suhu CPU khas Raspi
+    if load is None:
+        load = round(random.uniform(5.0, 40.0), 1)
+    if mem is None:
+        mem = round(random.uniform(20.0, 70.0), 1)
+    if up is None:
+        up = seq * 60
 
     payload: dict = {
         "id": NODE_ID,
@@ -106,26 +123,25 @@ def build_payload(seq: int) -> dict:
         "kecamatan": KECAMATAN,
         "ts": int(time.time()),
         "seq": seq,
+        "weather": {
+            "temp": temp,                      # suhu CPU sebagai 'suhu' (demo)
+            "hum": load,                       # beban CPU sebagai 'kelembapan' (demo)
+            "press": round(random.uniform(1005.0, 1012.0), 1),
+        },
+        "power": {
+            "batt_v": round(random.uniform(12.0, 13.2), 2),
+            "pv_v": round(random.uniform(15.0, 19.0), 1),
+            "soc": round(100.0 - mem, 1),      # sisa RAM sebagai 'kapasitas aki'
+        },
+        "tilt": {
+            "delta": round(random.uniform(0.0, 1.2), 2),  # kecil, aman (demo)
+        },
+        "health": {
+            "rssi": random.randint(-100, -70),
+            "uptime": up,
+            "fw": "rpi-demo-0.1",
+        },
     }
-    weather = {}
-    if temp is not None:
-        weather["temp"] = temp          # suhu CPU sebagai 'suhu' (demo)
-    if load is not None:
-        weather["hum"] = load           # beban CPU sebagai 'kelembapan' (demo)
-    if weather:
-        payload["weather"] = weather
-
-    power = {}
-    if mem is not None:
-        power["soc"] = round(100.0 - mem, 1)   # sisa RAM sebagai 'kapasitas aki'
-    if power:
-        payload["power"] = power
-
-    health = {"fw": "rpi-demo-0.1"}
-    if up is not None:
-        health["uptime"] = up
-    payload["health"] = health
-
     return payload
 
 
