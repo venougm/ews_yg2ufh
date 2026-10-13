@@ -40,3 +40,6 @@ Thumbs.db
 .idea/
 .vscode/*
 !.vscode/extensions.json
+
+# Artefak internal workflow (berisi catatan kerja; jangan di-commit ke repo publik)
+.agents/

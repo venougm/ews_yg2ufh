@@ -16,7 +16,7 @@ naming the offending key and falls back to the documented default instead of
 raising, so a malformed value is caught at startup with a clear cause rather than
 failing deep inside a query later.
 
-ANTI-CONFLICT with the APRS backend (yg2ufh.mooo.com:8000): EWS defaults deliberately
+ANTI-CONFLICT with the APRS backend (ews.example.com:8000): EWS defaults deliberately
 differ so the two never collide on the shared broker -- client_id 'ews-web-backend'
 (a shared client_id would kick APRS off the broker), topic prefix 'yg2ufh/ews',
 HTTP port 8001, DB './data/ews.db'.

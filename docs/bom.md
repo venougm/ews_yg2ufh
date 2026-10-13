@@ -86,8 +86,8 @@ Catatan: T-Beam 433 (2 WX + 1 tracker, firmware CA2RXU) TIDAK dipakai di project
 
 | Item | Status | Catatan |
 |---|---|---|
-| MQTT server `yg2ufh.mooo.com:1883` | [x] | broker sudah jalan |
-| Server web flasher `yg2ufh.mooo.com` (HTTPS) | [ ] | WAJIB HTTPS untuk Web Serial. Terpisah dari MQTT/APRS :8000 |
+| MQTT server `ews.example.com:1883` | [x] | broker sudah jalan |
+| Server web flasher `ews.example.com` (HTTPS) | [ ] | WAJIB HTTPS untuk Web Serial. Terpisah dari MQTT/APRS :8000 |
 | Repo GitHub `venougm` | [x] | |
 
 ---

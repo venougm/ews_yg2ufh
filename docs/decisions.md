@@ -134,10 +134,10 @@ Di mockup: grafik pakai data dummy.
   BUKAN basis EWS. Dashboard EWS berdiri sendiri.
 
 ### Dua dashboard terpisah, dipisah lewat PORT (Opsi A — fix)
-Akan ada DUA dashboard independen di host `yg2ufh.mooo.com`:
-- APRS (proyek `c:\aws-kiro\mqtt-server`, sudah ada) -> `yg2ufh.mooo.com:8000`,
+Akan ada DUA dashboard independen di host `ews.example.com`:
+- APRS (proyek `c:\aws-kiro\mqtt-server`, sudah ada) -> `ews.example.com:8000`,
   subscribe topik `aprs/#`.
-- EWS (app baru, belum dibuat)                        -> `yg2ufh.mooo.com:8001`,
+- EWS (app baru, belum dibuat)                        -> `ews.example.com:8001`,
   subscribe topik `yg2ufh/ews/#`.
 
 Pemisahan lewat PORT, bukan path/reverse-proxy. Dua proses FastAPI terpisah,
@@ -159,7 +159,7 @@ Status: ini tahap "app beneran" NANTI. Sekarang EWS masih mockup HTML statis
 - Library: paho-mqtt + json bawaan + FastAPI (pola mirip mqtt-server tapi tanpa aprslib).
 
 ### CHECKLIST ANTI-BENTROK dengan APRS (`mqtt-server` :8000) — WAJIB
-APRS di `yg2ufh.mooo.com:8000` SUDAH JALAN NORMAL dan TIDAK BOLEH terganggu.
+APRS di `ews.example.com:8000` SUDAH JALAN NORMAL dan TIDAK BOLEH terganggu.
 EWS harus memakai sumber daya SENDIRI di tiap titik berikut:
 
 | Sumber daya      | APRS (sudah ada)      | EWS (harus BEDA)        |
@@ -175,7 +175,7 @@ memakai client_id SAMA. Jika EWS pakai `aprs-web-backend`, APRS akan putus-nyamb
 EWS WAJIB `ews-web-backend`.
 
 AMAN dibagi (tidak bentrok):
-- Broker MQTT yang sama (`yg2ufh.mooo.com:1883`) — dirancang melayani banyak klien.
+- Broker MQTT yang sama (`ews.example.com:1883`) — dirancang melayani banyak klien.
   APRS dengar `aprs/#`, EWS dengar `yg2ufh/ews/#`; tidak saling dengar.
 - Satu VPS yang sama — asal port beda & service name beda.
 

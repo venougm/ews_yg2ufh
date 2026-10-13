@@ -11,7 +11,7 @@ the backend, and enforces 12-month (365-day) retention.
 ## ⚠️ ANTI-CONFLICT (READ BEFORE RUNNING)
 
 This backend shares the MQTT broker with the **live APRS backend** that runs on
-`yg2ufh.mooo.com:8000`. That APRS service is in production and must not be
+`ews.example.com:8000`. That APRS service is in production and must not be
 disturbed. To avoid any collision, the EWS backend MUST use its own resources:
 
 | Resource        | EWS value           | Why it matters                                             |
@@ -21,7 +21,7 @@ disturbed. To avoid any collision, the EWS backend MUST use its own resources:
 | MQTT topic      | **`yg2ufh/ews`** (subscribe `yg2ufh/ews/#`) | Keeps EWS traffic off the APRS topics.     |
 | SQLite DB       | **`ews.db`** (`./data/ews.db`) | Separate datastore from APRS.                     |
 
-**NEVER connect to the production broker `yg2ufh.mooo.com` in automated tests.**
+**NEVER connect to the production broker `ews.example.com` in automated tests.**
 The APRS service on `:8000` is live, and the EWS tests must stay broker-free. No
 local mosquitto is required: the test suite and `tools/inject_sample.py` drive
 the ingest pipeline directly, with no network broker involved. The node

@@ -5,7 +5,7 @@ Dokumen ini merangkum keputusan desain dari sesi perencanaan. Masih bisa berubah
 ## 1. Tujuan
 
 Early Warning System (EWS) longsor + stasiun cuaca + monitoring solar. Jaringan
-node sensor mengirim data ke MQTT server pribadi `yg2ufh.mooo.com:1883`.
+node sensor mengirim data ke MQTT server pribadi `ews.example.com:1883`.
 BUKAN APRS — APRS hanya dipakai sebagai inspirasi UX (kemudahan menambah node),
 bukan basis kode maupun protokol.
 
@@ -22,7 +22,7 @@ NODE (xN):  T-Beam 915
 
 GATEWAY (x1):  T-Beam 915
   - LoRa <- terima dari semua node
-  - WiFi -> publish ke MQTT yg2ufh.mooo.com:1883
+  - WiFi -> publish ke MQTT ews.example.com:1883
   - Deteksi node hilang -> alarm ke MQTT
   - Relay -> sirine (trigger: manual remote via MQTT + otomatis saat ambang bahaya)
   - (opsional nanti: upgrade ke Raspberry Pi untuk logika lokal)
@@ -87,7 +87,7 @@ Register map Modbus tergantung model controller (Tracer AN / XTRA / Triron / dll
 
 ## 4. MQTT (rencana)
 
-- Broker: `yg2ufh.mooo.com:1883` (user/pass kosong untuk sekarang).
+- Broker: `ews.example.com:1883` (user/pass kosong untuk sekarang).
 - Topic terstruktur, mis.: `yg2ufh/ews/<wilayah>/<node-id>/<sensor>/<metric>`.
 - Perintah sirine: `yg2ufh/ews/<wilayah>/siren/cmd` (ON/OFF).
 - Payload JSON.
@@ -95,7 +95,7 @@ Register map Modbus tergantung model controller (Tracer AN / XTRA / Triron / dll
 
 ## 5. Web flasher
 
-- Statis, host di `yg2ufh.mooo.com` (WAJIB HTTPS untuk Web Serial).
+- Statis, host di `ews.example.com` (WAJIB HTTPS untuk Web Serial).
 - Pakai ESP Web Tools (seperti CA2RXU) tapi branding YG2UFH sendiri, firmware sendiri.
 - Flash satu firmware ke semua T-Beam; peran & frekuensi dipilih setelah flash (captive portal).
 - ESP Web Tools punya "Logs & Console" bawaan -> tidak perlu bikin serial monitor sendiri.

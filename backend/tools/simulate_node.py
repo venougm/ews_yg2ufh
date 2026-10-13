@@ -11,9 +11,9 @@ client_id would kick the other client off the broker. Default here is
 'ews-node-sim'.
 
 Run (publishes forever every 5s):
-    python tools/simulate_node.py --host yg2ufh.mooo.com
+    python tools/simulate_node.py --host ews.example.com
 Run once (one round of readings, then exit):
-    python tools/simulate_node.py --host yg2ufh.mooo.com --once
+    python tools/simulate_node.py --host ews.example.com --once
 """
 
 from __future__ import annotations

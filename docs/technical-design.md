@@ -192,7 +192,7 @@ Saat pertama nyala / tombol reset config ditekan, perangkat jadi AP WiFi
 - **Setting radio LoRa**: SF, BW, CR, TxPower (atau preset: "jauh" / "cepat")
 - **Sensor aktif** (node): centang BME280, tilt, pH, ext, rain, EPEVER
 - **WiFi** (gateway): SSID + password jaringan internet lokal
-- **MQTT** (gateway): host `yg2ufh.mooo.com`, port `1883`, user/pass (kosong untuk sekarang)
+- **MQTT** (gateway): host `ews.example.com`, port `1883`, user/pass (kosong untuk sekarang)
 - **Ambang sirine** (gateway): nilai ambang tilt dll.
 
 Konfig disimpan di NVS/flash. Library: **WiFiManager** (atau captive portal custom).

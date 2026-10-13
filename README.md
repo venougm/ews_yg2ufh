@@ -2,7 +2,7 @@
 
 Early Warning System (EWS) berbasis jaringan sensor LoRa untuk pemantauan
 pergerakan tanah / longsor + cuaca + solar, dengan data dikirim ke MQTT server
-pribadi `yg2ufh.mooo.com`.
+pribadi `ews.example.com`.
 
 Status: **PERENCANAAN** (belum masuk tahap coding firmware).
 
@@ -15,7 +15,7 @@ otomatis, demi menghindari alarm palsu).
 
 ```
 [Node sensor] --LoRa--+
-[Node sensor] --LoRa--+--> [GATEWAY] --WiFi/MQTT--> yg2ufh.mooo.com:1883 --> dashboard
+[Node sensor] --LoRa--+--> [GATEWAY] --WiFi/MQTT--> ews.example.com:1883 --> dashboard
 [Node sensor] --LoRa--+                  |
                                          +--> relay --> SIRINE
 ```
@@ -39,5 +39,5 @@ Wilayah: **Yogyakarta, Kabupaten Sleman**.
 ## Komponen project (rencana)
 
 - `firmware/` — firmware EWS (PlatformIO), satu kode untuk Node & Gateway.
-- `web-flasher/` — web flasher ber-branding YG2UFH (ESP Web Tools), host di `yg2ufh.mooo.com`.
+- `web-flasher/` — web flasher ber-branding YG2UFH (ESP Web Tools), host di `ews.example.com`.
 - `docs/` — dokumentasi perencanaan & desain.
