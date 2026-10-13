@@ -28,18 +28,21 @@ import time
 
 import paho.mqtt.client as mqtt
 
-# ====================== KONFIGURASI (EDIT DI SINI) ======================
-BROKER_HOST = "ISI_ALAMAT_SERVER"   # IP/domain server EWS (broker mosquitto)
+# ====================== KONFIGURASI (default; bisa di-override via argumen) ======================
+# PENTING: JANGAN tulis password asli di sini lalu commit ke git (repo publik!).
+# Beri password lewat argumen --password saat menjalankan, mis.:
+#   python3 rpi_demo_sender.py --host localhost --user ews --password 'xxxxx'
+BROKER_HOST = "localhost"           # IP/domain server EWS (broker mosquitto)
 BROKER_PORT = 1883
 MQTT_USER   = "ews"                 # user mosquitto
-MQTT_PASS   = "ISI_PASSWORD_EWS"    # password mosquitto user ews
+MQTT_PASS   = ""                    # KOSONGKAN di file; isi lewat --password
 
 NODE_ID     = "slm-rpi-01"          # harus sama dgn yg didaftarkan di dashboard
 PROVINSI    = "diy"
 KABUPATEN   = "sleman"
 KECAMATAN   = "ngemplak"
 INTERVAL    = 60                    # detik antar kiriman
-# ========================================================================
+# ================================================================================================
 
 CLIENT_ID = "ews-rpi-demo"          # beda dari backend (ews-web-backend) & sim
 
@@ -89,7 +92,7 @@ def uptime_sec() -> int | None:
         return None
 
 
-def build_payload(seq: int) -> dict:
+def build_payload(seq: int, node_id: str = NODE_ID, kabupaten: str = KABUPATEN) -> dict:
     """Opsi 1: petakan data Raspi ke field EWS supaya kartu dashboard terisi.
     - weather.temp  <- suhu CPU (°C)   (demo: dipakai sebagai 'suhu')
     - weather.hum   <- beban CPU (%)   (demo: dipakai sebagai 'kelembapan')
@@ -117,9 +120,9 @@ def build_payload(seq: int) -> dict:
         up = seq * 60
 
     payload: dict = {
-        "id": NODE_ID,
+        "id": node_id,
         "provinsi": PROVINSI,
-        "kabupaten": KABUPATEN,
+        "kabupaten": kabupaten,
         "kecamatan": KECAMATAN,
         "ts": int(time.time()),
         "seq": seq,
@@ -147,21 +150,28 @@ def build_payload(seq: int) -> dict:
 
 def main() -> int:
     parser = argparse.ArgumentParser(description="EWS Raspberry Pi demo sender")
+    parser.add_argument("--host", default=os.environ.get("MQTT_BROKER_HOST", BROKER_HOST))
+    parser.add_argument("--port", type=int, default=int(os.environ.get("MQTT_BROKER_PORT", BROKER_PORT)))
+    parser.add_argument("--user", default=os.environ.get("MQTT_USERNAME", MQTT_USER))
+    parser.add_argument("--password", default=os.environ.get("MQTT_PASSWORD", MQTT_PASS),
+                        help="password mosquitto (JANGAN taruh di file; pakai argumen ini)")
+    parser.add_argument("--node-id", default=NODE_ID)
+    parser.add_argument("--kabupaten", default=KABUPATEN)
     parser.add_argument("--once", action="store_true", help="kirim sekali lalu keluar")
     parser.add_argument("--interval", type=float, default=INTERVAL)
     args = parser.parse_args()
 
     client = mqtt.Client(client_id=CLIENT_ID)
-    if MQTT_USER:
-        client.username_pw_set(MQTT_USER, MQTT_PASS)
-    client.connect(BROKER_HOST, BROKER_PORT)
+    if args.user:
+        client.username_pw_set(args.user, args.password)
+    client.connect(args.host, args.port)
     client.loop_start()
 
-    topic = f"yg2ufh/ews/{KABUPATEN}/{NODE_ID}/data"
+    topic = f"yg2ufh/ews/{args.kabupaten}/{args.node_id}/data"
     seq = 1
     try:
         while True:
-            payload = build_payload(seq)
+            payload = build_payload(seq, args.node_id, args.kabupaten)
             client.publish(topic, json.dumps(payload), qos=1)
             print(f"terkirim -> {topic}  seq={seq}  {json.dumps(payload)}")
             seq += 1
