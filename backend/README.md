@@ -95,7 +95,13 @@ POST /api/nodes                          manually register a node
 GET  /api/nodes/{id}                     node detail + latest (404 if unknown)
 GET  /api/nodes/{id}/history?hours=N     reading history (grafik)
 GET  /api/thresholds                     global + per-node overrides
-PUT  /api/thresholds                     set global or node:<id> threshold
+PUT  /api/thresholds                     set global or node:<id> threshold (ADMIN)
+POST /api/login                          log in (sets ews_session cookie)
+POST /api/logout                         clear the session
+GET  /api/me                             current auth state {authenticated,...}
+GET  /api/users                          list users, no password hash (ADMIN)
+POST /api/users                          create a user (ADMIN)
+DELETE /api/users/{username}             delete a user (ADMIN)
 WS   /ws/live                            realtime push (reading + alarm)
 GET  /node.html                          per-node detail page
 GET  /                                   dashboard (static)
@@ -106,6 +112,40 @@ push-only: the server emits `{type:'reading', ...}` on each stored reading and
 `{type:'alarm', level, source, reason, ts}` when a tilt threshold is crossed or
 a node goes silent.
 
+## Auth 'Tingkat A' (login + RBAC)
+
+Real login with a signed-cookie session and bcrypt-hashed passwords. Passwords
+are stored only as bcrypt hashes — never plaintext.
+
+**Roles (RBAC):**
+
+- `monitor` — view only.
+- `operator` — view (plus siren control once that UI exists; not in TAHAP 1).
+- `admin` — everything, including editing thresholds, node/region registration,
+  and user management.
+
+The **backend is the real enforcer**: the data-changing endpoints
+(`PUT /api/thresholds`, `POST /api/nodes`, `POST /api/kabupaten`,
+`POST /api/kabupaten/{kab}/kecamatan`) and all `/api/users` endpoints require an
+`admin` session (401 when logged out, 403 for a non-admin role). All `GET`
+endpoints, `/ws/live`, and the static dashboard stay open. UI hiding is
+convenience only.
+
+**Admin seeding (first startup, empty users table):** one admin is created from
+`EWS_ADMIN_USER` / `EWS_ADMIN_PASSWORD`. If `EWS_ADMIN_PASSWORD` is empty, a
+random password is **logged once** at startup — copy it from the logs, it is
+never shown again. Re-starting against a non-empty users table does not create a
+second admin.
+
+**Demo users (testing only):** set `EWS_SEED_DEMO_USERS=true` to seed `operator`
+and `monitor` accounts (password = username) for exercising each role in the UI.
+Never enable this in production.
+
+**HTTP vs HTTPS:** this backend serves plain HTTP, which is fine for local
+testing. HTTPS is **REQUIRED before any public/production use** — the session
+cookie carries the login. Keep `COOKIE_SECURE=false` for HTTP testing and set it
+to `true` (behind a TLS terminator) in production.
+
 ## Scope — what is TAHAP 2 and intentionally NOT built here
 
 The following are explicitly out of scope for TAHAP 1 and are **not implemented**
@@ -113,9 +153,8 @@ in this backend. They are deferred to TAHAP 2:
 
 - **Real PDF export** — there is no `POST /api/report` endpoint; report
   generation (ReportLab/WeasyPrint) is TAHAP 2.
-- **Real auth / login / chat** — no authentication, session, or chat backend.
-  An RBAC role badge may appear in the UI, but there is no real backend
-  enforcement behind it.
+- **Real chat** — no chat backend. (Real auth/login IS implemented now — see the
+  'Auth Tingkat A' section above — with RBAC enforced in the backend.)
 - **Alarm-sound editing** — editing/uploading the siren/alarm sound that gets
   sent to the device is TAHAP 2. The dashboard plays a built-in Web Audio beep
   only; there is no sound-file management here.

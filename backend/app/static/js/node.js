@@ -225,8 +225,23 @@ function fmtUptime(sec) {
   return `${h}j ${m}m`;
 }
 
+/* Light auth gate: if logged out, bounce to the dashboard (which shows the
+   login overlay). Backend keeps GET endpoints open, so this is UX only. */
+async function requireLogin() {
+  try {
+    const r = await fetch("/api/me");
+    if (!r.ok) return true; // can't verify -> don't block the page
+    const me = await r.json();
+    if (!me.authenticated) { location.href = "/"; return false; }
+  } catch (e) {
+    console.warn("auth check failed", e);
+  }
+  return true;
+}
+
 /* ---------------- entry ---------------- */
 (async function () {
+  if (!(await requireLogin())) return;
   const id = qs("id");
   if (!id) { renderNotFound(id); return; }
   document.title = "Detail " + id + " — EWS YG2UFH";

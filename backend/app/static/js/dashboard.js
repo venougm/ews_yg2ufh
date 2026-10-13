@@ -204,9 +204,33 @@ function redrawMarkers() {
   else if (pts.length > 1) state.map.fitBounds(pts, { padding: [40, 40], maxZoom: 14 });
 }
 
+/* ---------------- auth error handling ---------------- */
+/* Thrown by fetchJson on 401/403 so callers can show a friendly message.
+   401 -> session expired (show login overlay); 403 -> needs admin. */
+class AuthError extends Error {
+  constructor(status) {
+    super(status === 401 ? "Sesi habis, silakan login lagi." : "Aksi ini hanya untuk admin.");
+    this.status = status;
+  }
+}
+
+/* Show the login overlay again (reuses auth.js if present). */
+function showLoginOverlay() {
+  if (window.showLoginOverlay && window.showLoginOverlay !== showLoginOverlay) {
+    window.showLoginOverlay();
+    return;
+  }
+  const ov = document.getElementById("loginOverlay");
+  if (ov) ov.classList.remove("hidden");
+}
+
 /* ---------------- data loading ---------------- */
 async function fetchJson(url) {
   const r = await fetch(url);
+  if (r.status === 401 || r.status === 403) {
+    if (r.status === 401) showLoginOverlay();
+    throw new AuthError(r.status);
+  }
   if (!r.ok) throw new Error(`${url} -> ${r.status}`);
   return r.json();
 }
@@ -448,6 +472,17 @@ async function saveThr() {
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ scope, tilt_siaga: siaga, tilt_awas: awas }),
     });
+    if (r.status === 401) {
+      err.style.color = "";
+      err.textContent = "Sesi habis, silakan login lagi.";
+      showLoginOverlay();
+      return;
+    }
+    if (r.status === 403) {
+      err.style.color = "";
+      err.textContent = "Aksi ini hanya untuk admin.";
+      return;
+    }
     if (!r.ok) throw new Error("PUT -> " + r.status);
     err.style.color = "var(--green)";
     err.textContent = "Tersimpan. Ambang untuk " + scope + " = SIAGA " + siaga + "° / AWAS " + awas + "°.";
@@ -484,7 +519,27 @@ function setupFilters() {
   });
 }
 
+/* ---------------- RBAC UI visibility (convenience only) ----------------
+   The backend is the real enforcer (FEAT-001). Hiding controls here just
+   avoids showing non-admins buttons that would 403 anyway.
+     monitor -> view only
+     operator -> view (siren control belongs here once it exists; TAHAP 1 has
+                 no siren UI, so operator currently sees nothing extra)
+     admin   -> everything incl. #btnThr (Edit Ambang) + #btnUsers (Kelola User)
+   NOTE: when a physical-siren button is added, show it for operator+admin. */
+function applyRbacVisibility(role) {
+  const isAdmin = role === "admin";
+  const btnThr = document.getElementById("btnThr");     // KEBUTUHAN A: admin only
+  const btnUsers = document.getElementById("btnUsers"); // user mgmt: admin only
+  if (btnThr) btnThr.classList.toggle("hidden", !isAdmin);
+  if (btnUsers) btnUsers.classList.toggle("hidden", !isAdmin);
+}
+window.applyRbacVisibility = applyRbacVisibility;
+
+let _dashboardStarted = false;
 async function init() {
+  if (_dashboardStarted) return; // guard against double-init
+  _dashboardStarted = true;
   initMap();
   setupMute();
   setupFilters();
@@ -494,4 +549,5 @@ async function init() {
   connectWs();
 }
 
-document.addEventListener("DOMContentLoaded", init);
+/* auth.js calls this only after a confirmed login (no DOMContentLoaded auto-run). */
+window.initDashboard = init;

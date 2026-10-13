@@ -9,10 +9,11 @@ from __future__ import annotations
 import json
 import logging
 
-from fastapi import APIRouter, HTTPException, Query
+from fastapi import APIRouter, Depends, HTTPException, Query
 
 from app import db, mqtt_ingest
 from app.config import get_settings
+from app.deps import require_admin
 from app.schemas import HistoryPointOut, NodeOut
 
 logger = logging.getLogger(__name__)
@@ -105,7 +106,8 @@ def get_nodes_route(
     return results
 
 
-@router.post("/nodes", response_model=NodeOut, status_code=201)
+@router.post("/nodes", response_model=NodeOut, status_code=201,
+             dependencies=[Depends(require_admin)])
 def post_node_route(body: NodeOut):
     """Manually register a node (coordinates/location/grouping). EWS uses manual
     registration, not auto-discovery, for dashboard positions."""

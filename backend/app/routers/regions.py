@@ -9,9 +9,10 @@ from __future__ import annotations
 
 import logging
 
-from fastapi import APIRouter, HTTPException
+from fastapi import APIRouter, Depends, HTTPException
 
 from app import db
+from app.deps import require_admin
 from app.schemas import KabupatenOut, KecamatanOut
 
 logger = logging.getLogger(__name__)
@@ -29,7 +30,8 @@ def get_kabupaten_route():
     return [KabupatenOut(**row) for row in rows]
 
 
-@router.post("/kabupaten", response_model=KabupatenOut, status_code=201)
+@router.post("/kabupaten", response_model=KabupatenOut, status_code=201,
+             dependencies=[Depends(require_admin)])
 def post_kabupaten_route(body: KabupatenOut):
     try:
         db.add_kabupaten(body.id, body.nama, body.provinsi)
@@ -49,7 +51,8 @@ def get_kecamatan_route(kab: str):
     return [KecamatanOut(**row) for row in rows]
 
 
-@router.post("/kabupaten/{kab}/kecamatan", response_model=KecamatanOut, status_code=201)
+@router.post("/kabupaten/{kab}/kecamatan", response_model=KecamatanOut, status_code=201,
+             dependencies=[Depends(require_admin)])
 def post_kecamatan_route(kab: str, body: KecamatanOut):
     try:
         db.add_kecamatan(body.id, body.nama, kab)

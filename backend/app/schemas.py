@@ -55,3 +55,20 @@ class ThresholdIn(BaseModel):
     scope: str
     tilt_siaga: float
     tilt_awas: float
+
+
+class LoginIn(BaseModel):
+    username: str
+    password: str
+
+
+class UserCreateIn(BaseModel):
+    username: str
+    password: str
+    role: str
+
+
+class UserOut(BaseModel):
+    username: str
+    role: str
+    created_at: str

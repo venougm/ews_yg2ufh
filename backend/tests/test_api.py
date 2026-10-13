@@ -17,6 +17,10 @@ def client():
     os.environ["MQTT_BROKER_HOST"] = "127.0.0.1"
     os.environ["MQTT_TOPIC_PREFIX"] = "yg2ufh/ews"
     os.environ["DB_PATH"] = ":memory:"
+    # Auth 'Tingkat A' makes the mutating endpoints admin-only; seed a known
+    # admin so the tests below can log in before POST/PUT.
+    os.environ["EWS_ADMIN_PASSWORD"] = "admin123"
+    os.environ["SESSION_SECRET"] = "test-secret"
 
     from app.config import reset_settings_cache
 
@@ -28,6 +32,11 @@ def client():
         yield c
 
 
+def _login_admin(client):
+    r = client.post("/api/login", json={"username": "admin", "password": "admin123"})
+    assert r.status_code == 200
+
+
 def test_nodes_empty_ok(client):
     r = client.get("/api/nodes")
     assert r.status_code == 200
@@ -35,6 +44,7 @@ def test_nodes_empty_ok(client):
 
 
 def test_kabupaten_post_then_get(client):
+    _login_admin(client)
     r = client.post("/api/kabupaten", json={"id": "sleman", "nama": "Sleman", "provinsi": "diy"})
     assert r.status_code == 201
 
@@ -55,6 +65,7 @@ def test_thresholds_put_then_get(client):
     assert r.status_code == 200
     assert any(t["scope"] == "global" for t in r.json())
 
+    _login_admin(client)
     r = client.put("/api/thresholds", json={"scope": "node:slm-01", "tilt_siaga": 1.5, "tilt_awas": 4.0})
     assert r.status_code == 200
 
@@ -69,6 +80,7 @@ def test_unknown_node_404(client):
 
 
 def test_register_node_then_detail(client):
+    _login_admin(client)
     r = client.post("/api/nodes", json={"node_id": "slm-01", "nama": "Node 1", "kabupaten": "sleman", "kecamatan": "depok", "lat": -7.72, "lon": 110.38})
     assert r.status_code == 201
 

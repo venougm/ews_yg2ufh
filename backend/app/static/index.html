@@ -17,8 +17,11 @@
     <span class="spacer"></span>
     <span><span class="status-dot dot-amber" id="brokerDot"></span><span class="dim" id="brokerText">menghubungkan…</span></span>
     <span class="clock" id="clock">—</span>
-    <span class="userbox">👤 <b>operator</b>
-      <span class="role-badge role-operator" id="roleBadge">operator</span></span>
+    <!-- User + role are filled by auth.js from GET /api/me (no hardcoded user). -->
+    <span class="userbox">👤 <b id="userName">—</b>
+      <span class="role-badge" id="roleBadge"></span>
+      <button class="btn-user hidden" id="btnUsers" title="Kelola pengguna (admin)">👥 Kelola User</button>
+      <button class="btn-logout hidden" id="btnLogout" title="Keluar">Keluar</button></span>
   </div>
 
   <div class="wrap">
@@ -79,7 +82,7 @@
       <div class="modal-sub">
         Ambang memicu NOTIFIKASI alarm dashboard (bukan sirine fisik).
         <br><b>Default global</b>; bisa di-override per node (scope <code>node:&lt;id&gt;</code>).
-        <span class="dim">Catatan: pembatasan admin menyusul di TAHAP 2 (auth).</span>
+        <span class="dim">Hanya admin yang dapat mengubah ambang.</span>
       </div>
 
       <label class="flabel" for="thrScope">Scope</label>
@@ -99,9 +102,60 @@
     </div>
   </div>
 
+  <!-- Login overlay (KEBUTUHAN B) — shown by auth.js when GET /api/me says
+       {authenticated:false}. Dashboard data loads only after a successful login. -->
+  <div class="modal-overlay hidden" id="loginOverlay">
+    <div class="modal">
+      <h3>Masuk — EWS YG2UFH</h3>
+      <div class="modal-sub">Silakan login untuk melihat dashboard.</div>
+
+      <label class="flabel" for="loginUser">Nama pengguna</label>
+      <input class="inp" id="loginUser" type="text" autocomplete="username" placeholder="mis. admin" />
+
+      <label class="flabel" for="loginPass">Kata sandi</label>
+      <input class="inp" id="loginPass" type="password" autocomplete="current-password" placeholder="••••••••" />
+
+      <div class="modal-err" id="loginErr"></div>
+      <div class="modal-actions">
+        <button class="btn-primary" id="loginBtn">Masuk</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Panel Kelola User (admin only) — wired by users.js, opened by #btnUsers. -->
+  <div class="modal-overlay hidden" id="usersModal">
+    <div class="modal" style="width:460px">
+      <h3>Kelola User</h3>
+      <div class="modal-sub">Tambah atau hapus pengguna. Peran: monitor (lihat saja),
+        operator (lihat), admin (semua).</div>
+
+      <div class="users-list" id="usersList"><div class="dim">Memuat…</div></div>
+
+      <label class="flabel">Tambah pengguna</label>
+      <div class="users-add">
+        <input class="inp" id="newUser" type="text" placeholder="username" />
+        <input class="inp" id="newPass" type="password" placeholder="password" />
+        <select class="sel" id="newRole">
+          <option value="monitor">monitor</option>
+          <option value="operator">operator</option>
+          <option value="admin">admin</option>
+        </select>
+      </div>
+
+      <div class="modal-err" id="usersErr"></div>
+      <div class="modal-actions">
+        <button class="btn-off" id="usersClose">Tutup</button>
+        <button class="btn-primary" id="usersAdd">Tambah</button>
+      </div>
+    </div>
+  </div>
+
   <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"
     integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo=" crossorigin=""></script>
   <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
+  <!-- auth.js + users.js load BEFORE dashboard.js: auth.js gates init(). -->
+  <script src="/js/auth.js"></script>
+  <script src="/js/users.js"></script>
   <script src="/js/dashboard.js"></script>
 </body>
 </html>

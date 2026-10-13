@@ -96,6 +96,16 @@ CREATE TABLE IF NOT EXISTS thresholds (
     tilt_awas   REAL NOT NULL,
     updated_at  TEXT NOT NULL
 );
+
+-- Auth 'Tingkat A' users table. Added via the same executescript in init_db, so
+-- CREATE TABLE IF NOT EXISTS makes it an additive, safe migration for existing
+-- DBs. password_hash stores a bcrypt hash only -- never plaintext.
+CREATE TABLE IF NOT EXISTS users (
+    username        TEXT PRIMARY KEY,
+    password_hash   TEXT NOT NULL,
+    role            TEXT NOT NULL,
+    created_at      TEXT NOT NULL
+);
 """
 
 # Default global tilt thresholds (degrees), per technical-design.md §7:
@@ -530,3 +540,116 @@ def purge_old_readings(retention_days: int, now: datetime | None = None) -> int:
             conn.rollback()
             raise
     return deleted
+
+
+# ---------------------------------------------------------------------------
+# Users (auth 'Tingkat A')
+# ---------------------------------------------------------------------------
+
+def create_user(username: str, password_hash: str, role: str) -> None:
+    """Insert a new user. Lets sqlite3.IntegrityError propagate on a duplicate
+    username so the router can map it to a 409."""
+    conn = _ensure_initialized()
+    created_at = datetime.now(timezone.utc).isoformat()
+    with _db_lock:
+        cur = conn.cursor()
+        try:
+            cur.execute("BEGIN")
+            cur.execute(
+                """
+                INSERT INTO users (username, password_hash, role, created_at)
+                VALUES (?, ?, ?, ?)
+                """,
+                (username, password_hash, role, created_at),
+            )
+            conn.commit()
+        except Exception:
+            conn.rollback()
+            raise
+
+
+def get_user(username: str) -> dict[str, Any] | None:
+    """Full user row INCLUDING password_hash (used by login verification). API
+    responses must use list_users() which omits the hash."""
+    conn = _ensure_initialized()
+    with _db_lock:
+        cur = conn.cursor()
+        cur.execute(
+            "SELECT username, password_hash, role, created_at FROM users WHERE username = ?",
+            (username,),
+        )
+        row = cur.fetchone()
+        columns = [d[0] for d in cur.description]
+    if row is None:
+        return None
+    return dict(zip(columns, row))
+
+
+def list_users() -> list[dict[str, Any]]:
+    """All users, newest-safe ordering by username. Never returns password_hash."""
+    conn = _ensure_initialized()
+    with _db_lock:
+        cur = conn.cursor()
+        cur.execute(
+            "SELECT username, role, created_at FROM users ORDER BY username ASC"
+        )
+        rows = cur.fetchall()
+        columns = [d[0] for d in cur.description]
+    return [dict(zip(columns, row)) for row in rows]
+
+
+def delete_user(username: str) -> int:
+    """Delete a user; returns the number of rows removed (0 if not found)."""
+    conn = _ensure_initialized()
+    with _db_lock:
+        cur = conn.cursor()
+        try:
+            cur.execute("BEGIN")
+            cur.execute("DELETE FROM users WHERE username = ?", (username,))
+            deleted = cur.rowcount
+            conn.commit()
+        except Exception:
+            conn.rollback()
+            raise
+    return deleted
+
+
+def update_password(username: str, password_hash: str) -> None:
+    conn = _ensure_initialized()
+    with _db_lock:
+        cur = conn.cursor()
+        try:
+            cur.execute("BEGIN")
+            cur.execute(
+                "UPDATE users SET password_hash = ? WHERE username = ?",
+                (password_hash, username),
+            )
+            conn.commit()
+        except Exception:
+            conn.rollback()
+            raise
+
+
+def update_role(username: str, role: str) -> None:
+    conn = _ensure_initialized()
+    with _db_lock:
+        cur = conn.cursor()
+        try:
+            cur.execute("BEGIN")
+            cur.execute(
+                "UPDATE users SET role = ? WHERE username = ?",
+                (role, username),
+            )
+            conn.commit()
+        except Exception:
+            conn.rollback()
+            raise
+
+
+def count_users() -> int:
+    conn = _ensure_initialized()
+    with _db_lock:
+        cur = conn.cursor()
+        cur.execute("SELECT COUNT(*) FROM users")
+        row = cur.fetchone()
+    return int(row[0]) if row else 0

@@ -27,10 +27,11 @@ from pathlib import Path
 from fastapi import FastAPI
 from fastapi.responses import FileResponse
 from fastapi.staticfiles import StaticFiles
+from starlette.middleware.sessions import SessionMiddleware
 
-from app import db, mqtt_ingest, ws_manager
+from app import auth_seed, db, mqtt_ingest, ws_manager
 from app.config import get_settings
-from app.routers import nodes, regions, thresholds, ws
+from app.routers import auth, nodes, regions, thresholds, users, ws
 
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
@@ -89,6 +90,7 @@ async def lifespan(app: FastAPI):
     logging.getLogger().setLevel(settings.log_level)
 
     db.init_db(settings.db_path)
+    auth_seed.seed_users(settings)
 
     main_loop = asyncio.get_running_loop()
     client = mqtt_ingest.build_client(settings, main_loop)
@@ -121,6 +123,17 @@ async def lifespan(app: FastAPI):
 
 app = FastAPI(lifespan=lifespan)
 
+_settings = get_settings()
+app.add_middleware(
+    SessionMiddleware,
+    secret_key=_settings.session_secret,
+    same_site="lax",
+    https_only=_settings.cookie_secure,
+    session_cookie="ews_session",
+)
+
+app.include_router(auth.router, prefix="/api")
+app.include_router(users.router, prefix="/api")
 app.include_router(nodes.router, prefix="/api")
 app.include_router(regions.router, prefix="/api")
 app.include_router(thresholds.router, prefix="/api")

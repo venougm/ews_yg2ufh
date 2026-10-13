@@ -8,9 +8,10 @@ from __future__ import annotations
 
 import logging
 
-from fastapi import APIRouter, HTTPException
+from fastapi import APIRouter, Depends, HTTPException
 
 from app import db
+from app.deps import require_admin
 from app.schemas import ThresholdIn, ThresholdOut
 
 logger = logging.getLogger(__name__)
@@ -29,7 +30,7 @@ def get_thresholds_route():
     return [ThresholdOut(**row) for row in rows]
 
 
-@router.put("/thresholds", response_model=ThresholdOut)
+@router.put("/thresholds", response_model=ThresholdOut, dependencies=[Depends(require_admin)])
 def put_thresholds_route(body: ThresholdIn):
     """Set the global threshold (scope 'global') or a node override
     (scope 'node:<id>')."""

@@ -26,6 +26,7 @@ from __future__ import annotations
 
 import logging
 import os
+import secrets
 from dataclasses import dataclass
 from pathlib import Path
 from typing import Any
@@ -48,6 +49,10 @@ _DEFAULTS: dict[str, Any] = {
     "HTTP_PORT": 8001,
     "MISS_THRESHOLD_SEC": 180,
     "RETENTION_DAYS": 365,
+    "EWS_ADMIN_USER": "admin",
+    "EWS_ADMIN_PASSWORD": None,
+    "EWS_SEED_DEMO_USERS": False,
+    "COOKIE_SECURE": False,
 }
 
 
@@ -66,6 +71,11 @@ class Settings:
     http_port: int = 8001
     miss_threshold_sec: int = 180
     retention_days: int = 365
+    session_secret: str = ""
+    admin_user: str = "admin"
+    admin_password: str | None = None
+    seed_demo_users: bool = False
+    cookie_secure: bool = False
 
 
 def _load_yaml(path: str | Path) -> dict[str, Any]:
@@ -103,6 +113,21 @@ def _validate_min_int(key: str, raw: Any, default: int, minimum: int) -> int:
             key, raw, exc, default,
         )
         return default
+
+
+def _parse_bool(raw: Any, default: bool) -> bool:
+    """'true'/'1'/'yes' (case-insensitive) -> True; 'false'/'0'/'no' -> False;
+    an already-bool value passes through; anything else falls back to default."""
+    if raw is None:
+        return default
+    if isinstance(raw, bool):
+        return raw
+    value = str(raw).strip().lower()
+    if value in ("true", "1", "yes"):
+        return True
+    if value in ("false", "0", "no", ""):
+        return False
+    return default
 
 
 def _validate_log_level(raw: Any, default: str) -> str:
@@ -179,6 +204,19 @@ def load_settings(
     db_path = get("DB_PATH") or _DEFAULTS["DB_PATH"]
     http_host = get("HTTP_HOST") or _DEFAULTS["HTTP_HOST"]
 
+    session_secret = get("SESSION_SECRET")
+    if not session_secret:
+        session_secret = secrets.token_urlsafe(32)
+        logger.warning(
+            "config: SESSION_SECRET not set; using an EPHEMERAL dev secret "
+            "(sessions are invalidated on restart). Set SESSION_SECRET to a long "
+            "random value in production."
+        )
+    admin_user = get("EWS_ADMIN_USER") or _DEFAULTS["EWS_ADMIN_USER"]
+    admin_password = get("EWS_ADMIN_PASSWORD") or None
+    seed_demo_users = _parse_bool(get("EWS_SEED_DEMO_USERS"), _DEFAULTS["EWS_SEED_DEMO_USERS"])
+    cookie_secure = _parse_bool(get("COOKIE_SECURE"), _DEFAULTS["COOKIE_SECURE"])
+
     return Settings(
         mqtt_broker_host=str(mqtt_broker_host),
         mqtt_topic_prefix=str(mqtt_topic_prefix),
@@ -193,6 +231,11 @@ def load_settings(
         http_port=http_port,
         miss_threshold_sec=miss_threshold_sec,
         retention_days=retention_days,
+        session_secret=str(session_secret),
+        admin_user=str(admin_user),
+        admin_password=admin_password,
+        seed_demo_users=seed_demo_users,
+        cookie_secure=cookie_secure,
     )
 
 
