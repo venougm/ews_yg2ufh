@@ -102,7 +102,7 @@ void connectMqtt() {
 }
 
 void publishData() {
-  StaticJsonDocument<512> doc;
+  JsonDocument doc;                        // ArduinoJson v7
   doc["id"] = NODE_ID;
   doc["provinsi"] = PROVINSI;
   doc["kabupaten"] = KABUPATEN;
@@ -112,14 +112,12 @@ void publishData() {
 
   float t = esp32TempC();
   if (!isnan(t)) {
-    JsonObject weather = doc.createNestedObject("weather");
-    weather["temp"] = roundf(t * 10) / 10.0;  // suhu chip (DEMO)
+    doc["weather"]["temp"] = roundf(t * 10) / 10.0;  // suhu chip (DEMO)
   }
 
-  JsonObject health = doc.createNestedObject("health");
-  health["uptime"] = (unsigned long)(millis() / 1000);
-  health["rssi"] = WiFi.RSSI();
-  health["fw"] = "tbeam-exp-0.1";
+  doc["health"]["uptime"] = (unsigned long)(millis() / 1000);
+  doc["health"]["rssi"] = WiFi.RSSI();
+  doc["health"]["fw"] = "tbeam-exp-0.1";
 
   char topic[128];
   snprintf(topic, sizeof(topic), "yg2ufh/ews/%s/%s/data", KABUPATEN, NODE_ID);
