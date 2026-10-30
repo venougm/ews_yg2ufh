@@ -18,7 +18,7 @@ Legenda:
 | Antena LoRa 915 MHz (SMA) | 3 | [ ] cek | pastikan sesuai 915, bukan 433. Gain lebih tinggi untuk jarak 500m-1km |
 | Kabel USB-C (flashing & debug) | 1-3 | [ ] cek | untuk flash via web flasher |
 
-Catatan: T-Beam 433 (2 WX + 1 tracker, firmware CA2RXU) TIDAK dipakai di project ini.
+Catatan: T-Beam 433 (2 WX + 1 tracker, project APRS) TIDAK dipakai di project ini.
 
 ---
 

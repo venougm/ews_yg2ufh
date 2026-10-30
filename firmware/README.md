@@ -6,7 +6,7 @@ Firmware untuk sistem peringatan dini (Early Warning System) berbasis LilyGO
 > 📘 **Panduan pemakaian (operator):** [../docs/PANDUAN-PERANGKAT.md](../docs/PANDUAN-PERANGKAT.md)
 > — tutorial flash, setup pertama, cara baca OLED (dengan gambar), tombol IO38, troubleshooting.
 
-Arsitektur meniru iGate LoRa APRS **CA2RXU**, diadaptasi untuk EWS: **satu
+Arsitektur mengikuti pola iGate/tracker LoRa APRS, diadaptasi untuk EWS: **satu
 firmware, dua peran** yang dipilih lewat web config — **NODE** (seperti tracker)
 dan **GATEWAY** (seperti iGate). MQTT memakai **JSON native** (tanpa aprslib).
 
@@ -259,6 +259,6 @@ Sumber tunggal kebenaran: `include/board_pinout.h`. Ringkasan:
 | MCP23017 | LED POWER/LORA/ALARM/FAULT = GPA0..3; **SIREN relay = GPA4**; BTN TEST/SILENCE = GPB0/1; ROLE jumper = GPB2 (**diabaikan**) |
 | ADS1115 | AIN0 aki, AIN1 PV (lewat divider) |
 
-> RST=23 / DIO0=26 diambil dari spec tugas (varian CA2RXU v1.2_915 memakai
+> RST=23 / DIO0=26 diambil dari spec tugas (sebagian varian T-Beam v1.2_915 memakai
 > RST=14). AXP2101 (XPowersLib) di bus I2C **harus** di-init saat boot untuk
 > menyalakan rail daya LoRa + GPS sebelum `radio.begin()` / GPS dipakai.

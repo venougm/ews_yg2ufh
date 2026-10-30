@@ -4,7 +4,7 @@
 #include <Arduino.h>
 
 // WiFi: STA to configured APs with softAP fallback at 192.168.4.1.
-// Simplified from the CA2RXU wifi_utils/network_manager (no backupDigi / APRS).
+// Minimal WiFi manager (no APRS/digipeater logic).
 namespace WiFiManager {
     void begin();           // decide STA vs AP based on config, then connect
     void connectSTA();      // try configured APs

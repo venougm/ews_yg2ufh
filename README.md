@@ -30,7 +30,7 @@ otomatis, demi menghindari alarm palsu).
 - Semua perangkat: **LilyGO T-Beam** (ESP32 + LoRa + WiFi + GPS + manajemen baterai AXP).
 - Satu firmware untuk semua, peran (Node / Gateway) dan frekuensi dipilih saat setup.
 - Prototipe awal: **3× T-Beam 915 MHz** = 2 node + 1 gateway.
-- T-Beam 433 yang sudah dipakai firmware CA2RXU (2 WX + 1 tracker) TIDAK diganggu — itu project APRS terpisah.
+- T-Beam 433 yang sudah dipakai project APRS (2 WX + 1 tracker) TIDAK diganggu — itu project terpisah.
 
 Wilayah: **Yogyakarta, Kabupaten Sleman**.
 
@@ -43,7 +43,7 @@ Wilayah: **Yogyakarta, Kabupaten Sleman**.
 - [docs/architecture.md](docs/architecture.md) — arsitektur & keputusan desain.
 - [docs/decisions.md](docs/decisions.md) — catatan keputusan.
 - [docs/bom.md](docs/bom.md) — kebutuhan alat & bahan.
-- [docs/firmware-decisions-ca2rxu-model.md](docs/firmware-decisions-ca2rxu-model.md) — keputusan firmware (model CA2RXU, web flasher, dropdown wilayah).
+- [docs/firmware-decisions.md](docs/firmware-decisions.md) — keputusan firmware (arsitektur, web flasher, dropdown wilayah).
 
 ## Komponen project
 

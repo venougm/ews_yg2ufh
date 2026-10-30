@@ -3,7 +3,7 @@
 #include "configuration.h"
 #include "board_pinout.h"
 
-// Load/save EWS config JSON on SPIFFS. Mirrors CA2RXU configuration.cpp:
+// Load/save EWS config JSON on SPIFFS:
 //   - SPIFFS.begin(false) then (true) format fallback
 //   - no config file -> setDefaultValues() + writeFile() + restart
 //   - readFile() with a needsRewrite flag: any missing/null field triggers a

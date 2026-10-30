@@ -3,9 +3,9 @@
 
 #include <Arduino.h>
 
-// RadioLib SX1276 driver for the EWS T-Beam. Mirrors the CA2RXU lora_utils flow
-// (SPI.begin -> radio.begin -> setDio0Action -> apply RF params -> startReceive)
-// but drops the APRS "\x3c\xff\x01" prefix and the APRS/blacklist handling.
+// RadioLib SX1276 driver for the EWS T-Beam. Standard RadioLib flow
+// (SPI.begin -> radio.begin -> setDio0Action -> apply RF params -> startReceive).
+// Plain LoRa frames: no APRS prefix and no APRS/blacklist handling.
 // Payloads are the compact EWS LoRa JSON (see ews_packet.h).
 
 struct LoRaRx {

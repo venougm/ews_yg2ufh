@@ -3,9 +3,9 @@
 
 #include <Arduino.h>
 
-// AP-mode web configuration server (FEAT-004). Mirrors the CA2RXU web_utils
-// pattern: a plain WebServer (from the Arduino core) serving a sectioned HTML
-// settings form from SPIFFS plus a small JSON API.
+// AP-mode web configuration server (FEAT-004): a plain WebServer (from the
+// Arduino core) serving a sectioned HTML settings form from SPIFFS plus a
+// small JSON API.
 //
 //   GET  /                -> index.html (AP: setup form; STA: status page)
 //   GET  /api/config      -> current Configuration as JSON

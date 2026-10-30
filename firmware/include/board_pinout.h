@@ -2,7 +2,7 @@
 #define BOARD_PINOUT_H
 
 // Single source of truth for the LilyGO T-Beam v1.2 hardware pin map.
-// Per SPEC-REV-B.md and the EWS task spec. Where the CA2RXU v1.2_915 variant
+// Per SPEC-REV-B.md and the EWS task spec. Where a common T-Beam v1.2_915 variant
 // disagrees (RST=14), the TASK SPEC WINS: RST=23, DIO0=26.
 
 // ---- LoRa SX1276 (T-Beam) ----

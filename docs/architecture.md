@@ -96,7 +96,7 @@ Register map Modbus tergantung model controller (Tracer AN / XTRA / Triron / dll
 ## 5. Web flasher
 
 - Statis, host di `ews.example.com` (WAJIB HTTPS untuk Web Serial).
-- Pakai ESP Web Tools (seperti CA2RXU) tapi branding YG2UFH sendiri, firmware sendiri.
+- Pakai ESP Web Tools dengan branding YG2UFH sendiri, firmware sendiri.
 - Flash satu firmware ke semua T-Beam; peran & frekuensi dipilih setelah flash (captive portal).
 - ESP Web Tools punya "Logs & Console" bawaan -> tidak perlu bikin serial monitor sendiri.
 

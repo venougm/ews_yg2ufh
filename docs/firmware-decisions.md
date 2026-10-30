@@ -5,7 +5,7 @@
 1. **Board: T-Beam 915 MHz** (semua perangkat). Chip LoRa perlu dikonfirmasi saat
    coding (SX1276 vs SX1262) — RadioLib menangani keduanya.
 
-2. **Dua peran, satu firmware**: GATEWAY & NODE (seperti iGate & tracker CA2RXU).
+2. **Dua peran, satu firmware**: GATEWAY & NODE (seperti iGate & tracker).
 
 3. **Sensor & sirine FLEKSIBEL di kedua peran**: baik GATEWAY maupun NODE bisa
    dipasangi sensor dan/atau sirine sesuai PCB mainboard. Tinggal
@@ -18,15 +18,15 @@
      setting (peran, sensor on/off, sirine on/off, LoRa params, WiFi, MQTT, dll).
    - Setelah "Apply" -> otomatis beralih jadi **WiFi CLIENT**, konek ke access
      point penyedia internet.
-   - Ini SAMA dengan konsep CA2RXU (web config lalu jalan).
+   - Konsep umum web config lalu jalan.
 
-5. **Failover WiFi -> LoRa (konsep CA2RXU)**:
+5. **Failover WiFi -> LoRa**:
    - GATEWAY: punya WiFi client -> kirim data ke MQTT (internet).
    - NODE: kalau TIDAK ada WiFi -> kirim data ke GATEWAY via LoRa.
    - (Node yang kebetulan dapat WiFi bisa kirim langsung; yang tidak -> LoRa ke gateway.)
 
-6. **Web-based GUI untuk setting** — CONTOH TATA LETAK/GUI dari CA2RXU web config
-   (`firm/data`, `firm/src/web_utils.cpp`). Yang bisa disetel lewat web:
+6. **Web-based GUI untuk setting** — tata letak form config ala iGate LoRa APRS
+   (web server di perangkat, mode AP). Yang bisa disetel lewat web:
    - Peran (Gateway/Node)
    - Sensor aktif/nonaktif (BME280, gas MQ-135, rain, anemo, tilt, ADS1115, EPEVER RS485)
    - Sirine aktif/nonaktif + relay
@@ -35,7 +35,7 @@
    - MQTT (host ews.example.com, port 1883, user/pass, topic)
    - node_id, kabupaten, kecamatan, koordinat, lokasi
    - Ambang/threshold
-   - Setting-setting lain mengikuti kebutuhan (contoh dari CA2RXU web GUI)
+   - Setting-setting lain mengikuti kebutuhan
 
 ## Integrasi dengan server EWS (sudah ada, port 8001)
 
@@ -52,29 +52,25 @@ adalah project TERPISAH, jangan dicampur.
 ## Beda dari technical-design.md lama (perlu diselaraskan saat coding)
 
 - technical-design.md §1 & §8 bilang peran dipilih lewat captive portal + pilih
-  Node/Gateway. Keputusan baru ini MEMPERTEGAS: default boot = AP, web GUI ala
-  CA2RXU, sensor/sirine on-off per perangkat (bukan ditentukan peran), lalu apply
-  -> switch ke client. Ini kompatibel, hanya GUI-nya mencontoh CA2RXU.
+  Node/Gateway. Keputusan baru ini MEMPERTEGAS: default boot = AP, web GUI,
+  sensor/sirine on-off per perangkat (bukan ditentukan peran), lalu apply
+  -> switch ke client. Ini kompatibel.
 - Jumper ROLE di PCB: TIDAK jadi penentu peran (peran via web config). Jumper bisa
   dipakai lain / dibiarkan.
 
-## Referensi kode untuk dicontoh (saat coding)
-- `c:\aws-kiro\firm` = firmware CA2RXU asli (download user). Pelajari:
-  - `src/web_utils.cpp` + `data/` -> web config GUI (AP mode, form setting)
-  - `src/wifi_utils.cpp`, `network_manager.cpp` -> AP->client switch, failover
-  - `src/lora_utils.cpp` -> RadioLib LoRa TX/RX
-  - `src/configuration.cpp` -> simpan/muat config (NVS/JSON)
-  - `platformio.ini`, `variants/` -> target board T-Beam
+## Referensi (saat coding)
+- Pola arsitektur iGate/tracker LoRa APRS (web config AP mode, AP->client switch +
+  failover, RadioLib LoRa TX/RX, config JSON di flash, target board T-Beam).
 - `c:\aws-kiro\EWS_YG2UFH\docs\technical-design.md` -> format JSON, topic, protokol LoRa
 - `c:\aws-kiro\EWS_YG2UFH\backend` -> server EWS (port 8001) yang menerima data
 
 ## Library (rencana, dari technical-design.md §9)
 RadioLib, Adafruit BME280, Adafruit ADS1X15, ModbusMaster (EPEVER), WiFiManager
-atau captive portal custom (CA2RXU pakai web server sendiri), PubSubClient,
+atau captive portal custom (web server di perangkat), PubSubClient,
 ArduinoJson, XPowersLib (AXP2101), TinyGPSPlus.
 
 ## Langkah berikutnya (saat mulai coding)
-1. Pelajari struktur web config CA2RXU (web_utils.cpp + data/) untuk ditiru GUI-nya.
+1. Rancang struktur web config (form setting di mode AP).
 2. Skeleton firmware PlatformIO: boot AP -> web GUI -> apply -> client.
 3. Config schema (JSON/NVS): peran, sensor flags, sirine flag, LoRa, WiFi, MQTT, identitas.
 4. NODE path: baca sensor aktif -> paket LoRa -> (atau WiFi/MQTT bila ada WiFi).
@@ -118,7 +114,7 @@ Tanggal dicatat: sesi desain mockup web UI perangkat. Status: FINAL.
   fetch dari backend saat AP punya akses (opsional).
 
 ### Mockup web UI perangkat (hasil sesi ini)
-- `docs/mockup/device-setup.html` = halaman Setup/Config (mode AP) — form ala CA2RXU.
+- `docs/mockup/device-setup.html` = halaman Setup/Config (mode AP) — form sectioned.
 - `docs/mockup/device-status.html` = halaman Status/Dashboard (mode client).
 - Gaya mengikuti `docs/mockup/dashboard.html` (tema gelap, aksen merah YG2UFH, Inter,
   Bahasa Indonesia). Firmware web UI asli (web_config.cpp) harus meniru tata letak ini.

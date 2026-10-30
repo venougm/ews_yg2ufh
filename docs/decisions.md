@@ -1,12 +1,12 @@
 # Catatan Keputusan — EWS_YG2UFH
 
 ## Sudah FIX
-- Bikin firmware EWS sendiri yang ramping (bukan basis CA2RXU). CA2RXU hanya inspirasi UX.
+- Bikin firmware EWS sendiri yang ramping. Pola iGate/tracker LoRa APRS hanya inspirasi UX.
 - Transport: LoRa node -> gateway -> MQTT (WiFi). Bukan APRS.
 - Hardware: semua LilyGO T-Beam. Satu firmware, peran dipilih saat setup.
 - Prototipe: 3x T-Beam 915 = 2 node + 1 gateway.
 - Frekuensi per-jaringan; pilih 433/915 saat setup, cocok dengan board fisik.
-- EWS pakai 915. T-Beam 433 (CA2RXU: 2 WX + 1 tracker) tidak diganggu.
+- EWS pakai 915. T-Beam 433 (project APRS: 2 WX + 1 tracker) tidak diganggu.
 - Daya lega (50Wp + 50Ah) -> tidak perlu deep sleep rumit.
 - Interval kirim 1 menit (awal); rencana adaptif menyusul.
 - EPEVER di SETIAP node, via RS485/MAX485.
@@ -130,7 +130,7 @@ Di mockup: grafik pakai data dummy.
 - Alasan tambahan: saat FIRST FLASH firmware, operator WAJIB memasukkan koordinat &
   lokasi node secara manual (lihat captive portal di technical-design.md §8). Jadi
   koordinat memang ditetapkan manusia sejak awal, bukan diambil dari GPS.
-- Catatan: `mqtt-server` adalah proyek APRS (CA2RXU, callsign YG2UFH-10) — INSPIRASI UX,
+- Catatan: `mqtt-server` adalah proyek APRS (callsign YG2UFH-10) — INSPIRASI UX,
   BUKAN basis EWS. Dashboard EWS berdiri sendiri.
 
 ### Dua dashboard terpisah, dipisah lewat PORT (Opsi A — fix)
