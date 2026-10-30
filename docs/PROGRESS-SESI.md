@@ -76,3 +76,32 @@ Keputusan final (lihat PANDUAN-PERANGKAT.md §5 + mockup oled-screens.png):
 - EWS resource: port 8001, MQTT client_id `ews-web-backend`, topic `yg2ufh/ews`, DB `ews.db`.
 - Sirine SELALU manual (tidak pernah auto dari sensor).
 - Wilayah di web config = dropdown bertingkat (Provinsi→Kabupaten→Kecamatan→Kelurahan), simpan slug.
+
+---
+
+## 🔖 PERLU DIPUTUSKAN BESOK: Lisensi + Donasi
+
+Niat user: **open, bebas dipakai siapa saja (tanpa syarat berat), + pintu donasi
+SUKARELA/ikhlas** (tidak dipaksa; kalau tidak donasi juga tidak apa-apa).
+
+Lisensi & donasi = DUA hal terpisah. Firmware ditulis sendiri + pakai lib permissive
+(RadioLib MIT, ArduinoJson MIT, PubSubClient MIT, Adafruit BSD) → BEBAS pilih lisensi.
+
+Rekomendasi (sesuai niat "longgar"):
+| Bagian | Lisensi usulan |
+|---|---|
+| Firmware + Backend (software) | **MIT** (paling simpel, bebas pakai, cukup credit) |
+| Hardware PCB (repo mainboard) | **CERN-OHL-P v2** (permissive, pasangan MIT utk hardware) |
+| Dokumentasi | **CC BY 4.0** |
+| Donasi | `.github/FUNDING.yml` (tombol Sponsor) + bagian "Dukungan" di README, nada ikhlas |
+
+Platform donasi (user BELUM pilih): Trakteer / Saweria (lokal ID) / Ko-fi / GitHub
+Sponsors / PayPal. Bisa dikosongkan dulu, diisi belakangan.
+
+Kalau user setuju, TODO:
+1. File LICENSE (MIT) di repo EWS; LICENSE (CERN-OHL-P) di repo mainboard.
+2. Bagian "Lisensi" + "Dukungan/Donasi" di README kedua repo.
+3. `.github/FUNDING.yml` (isi link donasi pilihan user).
+
+Catatan: ini bukan nasihat hukum; untuk rencana komersial/institusi (mis. BPBD)
+sebaiknya konfirmasi ke ahli HKI. Untuk open-source biasa, pilihan di atas standar & aman.
