@@ -5,6 +5,8 @@
 #include "configuration.h"
 #include "display.h"
 #include "wifi_manager.h"
+#include "lora.h"
+#include "mqtt.h"
 
 // EWS T-Beam firmware — boot foundation (FEAT-001).
 // Boot order per plan: Serial -> I2C -> AXP2101 power rails (LoRa+GPS) -> config
@@ -71,6 +73,13 @@ void setup() {
         DisplayUtils::showStatus("WiFi connected");
     } else {
         DisplayUtils::showStatus("WiFi offline");
+    }
+
+    // Transport bring-up (FEAT-002): init the radio always; MQTT only matters in
+    // STA mode. Role behavior that uses these lands in a later FEAT.
+    if (!WiFiManager::isApMode()) {
+        LoRa_Utils::setup();
+        MQTT_Utils::setup();
     }
 }
 
