@@ -1,0 +1,62 @@
+{
+  "identity": {
+    "role": 0,
+    "nodeId": "",
+    "networkId": "ews1",
+    "provinsi": "",
+    "kabupaten": "",
+    "kecamatan": "",
+    "kelurahan": "",
+    "locationName": "",
+    "latitude": 0.0,
+    "longitude": 0.0
+  },
+  "wifi": {
+    "autoAP": {
+      "enabled": true,
+      "apPassword": "1234567890",
+      "timeout": 10
+    }
+  },
+  "lora": {
+    "freq": 915000000,
+    "sf": 9,
+    "cr": 5,
+    "bw": 125000,
+    "power": 20,
+    "syncWord": 18,
+    "cadActive": false
+  },
+  "mqtt": {
+    "active": false,
+    "server": "",
+    "port": 1883,
+    "username": "",
+    "password": "",
+    "clientId": ""
+  },
+  "sensors": {
+    "bme280": false,
+    "mq135": false,
+    "rain": false,
+    "anemo": false,
+    "tilt": false,
+    "ads1115": false,
+    "epever": false,
+    "gps": false,
+    "intervalSec": 60
+  },
+  "siren": {
+    "enabled": false,
+    "missThresholdSec": 180
+  },
+  "thresholds": {
+    "tiltSiaga": 5.0,
+    "tiltAwas": 10.0
+  },
+  "display": {
+    "enabled": true,
+    "timeout": 0,
+    "turn180": false
+  }
+}
