@@ -1,0 +1,13 @@
+{
+  "name": "EWS T-Beam YG2UFH",
+  "version": "0.1.0",
+  "new_install_prompt_erase": true,
+  "builds": [
+    {
+      "chipFamily": "ESP32",
+      "parts": [
+        { "path": "firmware-merged.bin", "offset": 0 }
+      ]
+    }
+  ]
+}

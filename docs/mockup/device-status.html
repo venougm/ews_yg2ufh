@@ -1,0 +1,205 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Mockup — Web Status T-Beam EWS (Mode Client)</title>
+<style>
+  :root{
+    --bg:#121417; --panel:#1c2025; --panel2:#22272e; --border:#2c333b;
+    --accent:#e23b3b; --accent-soft:rgba(226,59,59,.14);
+    --text:#e6edf3; --dim:#8b949e; --green:#2ea043; --amber:#d29922; --blue:#2f81f7;
+  }
+  *{box-sizing:border-box}
+  body{margin:0;background:var(--bg);color:var(--text);
+    font-family:"Inter",system-ui,"Segoe UI",Roboto,sans-serif;font-size:14px}
+  .mock-note{background:#3a2416;color:#f0d9b5;text-align:center;
+    padding:6px;font-size:12.5px;border-bottom:1px solid var(--amber)}
+  .topbar{display:flex;align-items:center;gap:14px;background:var(--panel2);
+    padding:12px 22px;border-bottom:1px solid var(--border);flex-wrap:wrap}
+  .brand{color:var(--accent);font-weight:700;font-size:21px;letter-spacing:1px}
+  .title{font-weight:600;font-size:16px}
+  .spacer{flex:1}
+  .status-dot{width:10px;height:10px;border-radius:50%;display:inline-block;margin-right:7px}
+  .dot-green{background:var(--green)} .dot-amber{background:var(--amber)} .dot-red{background:var(--accent)}
+  .dot-blue{background:var(--blue)}
+  .clock{color:var(--dim);font-family:Consolas,monospace;font-size:13px}
+  .dim{color:var(--dim)}
+  .role-badge{font-size:10.5px;font-weight:700;text-transform:uppercase;letter-spacing:.5px;
+    padding:2px 9px;border-radius:20px;border:1px solid var(--accent);color:var(--accent);background:var(--accent-soft)}
+  .wrap{padding:18px 22px;max-width:960px;margin:0 auto}
+
+  /* link-bar: transport status chips */
+  .links{display:flex;gap:10px;flex-wrap:wrap;margin-bottom:16px}
+  .chip{display:flex;align-items:center;gap:8px;background:var(--panel);border:1px solid var(--border);
+    border-radius:10px;padding:9px 14px;font-size:13px}
+  .chip b{font-weight:600}
+  .chip .sub{color:var(--dim);font-size:11px}
+
+  .grid{display:grid;grid-template-columns:repeat(3,1fr);gap:16px;margin-bottom:16px}
+  @media(max-width:820px){.grid{grid-template-columns:1fr 1fr}}
+  @media(max-width:560px){.grid{grid-template-columns:1fr}}
+  .card{background:var(--panel);border:1px solid var(--border);border-radius:14px;padding:16px 18px}
+  .card h3{margin:0 0 10px;font-size:14px;display:flex;align-items:center;gap:8px}
+  .card h3 .tag{margin-left:auto;font-size:10px;color:var(--dim);font-weight:500}
+  .metric{display:flex;justify-content:space-between;align-items:baseline;padding:6px 0;
+    border-bottom:1px solid var(--border)}
+  .metric:last-child{border-bottom:none}
+  .metric .k{color:var(--dim);font-size:12.5px}
+  .metric .v{font-size:15px;font-family:Consolas,monospace}
+  .v.ok{color:var(--green)} .v.warn{color:var(--amber)}
+
+  .big{display:flex;gap:20px;align-items:center}
+  .big .num{font-size:30px;font-weight:700}
+  .big .unit{font-size:14px;color:var(--dim)}
+
+  .btn{border-radius:8px;padding:10px 14px;font-weight:600;font-size:13px;cursor:pointer;border:1px solid;font-family:inherit}
+  .btn-siren{background:#2a1416;border-color:var(--accent);color:var(--accent)}
+  .btn-siren.active{background:var(--accent);color:#fff}
+  .btn-off{background:#1a1d22;border-color:var(--border);color:var(--dim)}
+  .btn-ghost{background:transparent;border-color:var(--border);color:var(--dim)}
+  .btn-blue{background:var(--blue);border-color:var(--blue);color:#fff}
+  .siren-row{display:flex;gap:10px;flex-wrap:wrap}
+
+  .wide{display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-bottom:16px}
+  @media(max-width:820px){.wide{grid-template-columns:1fr}}
+  .log{background:var(--panel);border:1px solid var(--border);border-radius:14px;padding:16px 18px}
+  .log h3{margin:0 0 10px;font-size:14px}
+  .serial{font-family:Consolas,monospace;font-size:12px;line-height:1.7;color:var(--dim);
+    max-height:220px;overflow:auto}
+  .serial .rx{color:var(--blue)} .serial .tx{color:var(--green)} .serial .warnl{color:var(--amber)}
+
+  .nodetable{width:100%;border-collapse:collapse;font-size:13px}
+  .nodetable th,.nodetable td{text-align:left;padding:7px 8px;border-bottom:1px solid var(--border)}
+  .nodetable th{color:var(--dim);font-weight:500;font-size:11.5px}
+  .mini{font-family:Consolas,monospace;font-size:11.5px;color:var(--dim)}
+
+  .foot{display:flex;gap:10px;margin:4px 0 30px;flex-wrap:wrap}
+</style>
+</head>
+<body>
+  <div class="mock-note">⚠ MOCKUP — halaman status yang dilayani T-Beam saat mode client (contoh peran GATEWAY). Data dummy, tombol simulasi. Untuk review desain.</div>
+
+  <div class="topbar">
+    <span class="brand">YG2UFH</span>
+    <span class="title">slm-gw-01 · Pos Induk Kaliurang</span>
+    <span class="role-badge">Gateway</span>
+    <span class="spacer"></span>
+    <span><span class="status-dot dot-green"></span><span class="dim">Online</span></span>
+    <span class="clock" id="clock">—</span>
+  </div>
+
+  <div class="wrap">
+
+    <!-- ===== transport link chips ===== -->
+    <div class="links">
+      <div class="chip"><span class="status-dot dot-green"></span><div><b>WiFi</b> <span class="sub">PosKaliurang-2G · -58 dBm</span></div></div>
+      <div class="chip"><span class="status-dot dot-green"></span><div><b>MQTT</b> <span class="sub">ews.yg2ufh.id:1883 · terhubung</span></div></div>
+      <div class="chip"><span class="status-dot dot-blue"></span><div><b>LoRa</b> <span class="sub">915.0 MHz · SF10 / BW125</span></div></div>
+      <div class="chip"><span class="status-dot dot-green"></span><div><b>Uptime</b> <span class="sub">3j 20m · fw 0.1.0</span></div></div>
+    </div>
+
+    <!-- ===== kartu metrik ===== -->
+    <div class="grid">
+      <div class="card">
+        <h3>🌦️ Cuaca <span class="tag">BME280 · lokal</span></h3>
+        <div class="metric"><span class="k">Suhu</span><span class="v">27.4 °C</span></div>
+        <div class="metric"><span class="k">Kelembapan</span><span class="v">82.1 %</span></div>
+        <div class="metric"><span class="k">Tekanan</span><span class="v">1008.3 hPa</span></div>
+      </div>
+
+      <div class="card">
+        <h3>🔋 Daya <span class="tag">EPEVER · RS485</span></h3>
+        <div class="metric"><span class="k">Aki</span><span class="v ok">12.8 V</span></div>
+        <div class="metric"><span class="k">Panel surya (PV)</span><span class="v">18.2 V</span></div>
+        <div class="metric"><span class="k">SOC</span><span class="v ok">87 %</span></div>
+      </div>
+
+      <div class="card">
+        <h3>📻 Radio <span class="tag">terakhir Rx</span></h3>
+        <div class="metric"><span class="k">RSSI</span><span class="v">-92 dBm</span></div>
+        <div class="metric"><span class="k">SNR</span><span class="v">7.5 dB</span></div>
+        <div class="metric"><span class="k">Paket (1 jam)</span><span class="v">58 Rx · 3 Tx</span></div>
+      </div>
+    </div>
+
+    <!-- ===== gateway: node + sirine ===== -->
+    <div class="wide">
+      <div class="card">
+        <h3>🛰️ Node Terdengar <span class="tag">2 online</span></h3>
+        <table class="nodetable">
+          <thead><tr><th>node_id</th><th>Terakhir</th><th>RSSI</th><th>Status</th></tr></thead>
+          <tbody>
+            <tr><td><b>slm-01</b></td><td class="mini">12 dtk lalu</td><td class="mini">-92</td><td><span class="status-dot dot-amber"></span>siaga</td></tr>
+            <tr><td><b>slm-02</b></td><td class="mini">40 dtk lalu</td><td class="mini">-78</td><td><span class="status-dot dot-green"></span>online</td></tr>
+          </tbody>
+        </table>
+        <div class="dim" style="font-size:11px;margin-top:8px">Node diam &gt; 3 menit → gateway publish status <b>offline</b> + alarm notifikasi.</div>
+      </div>
+
+      <div class="card">
+        <h3>🔊 Sirine <span class="tag">manual</span></h3>
+        <div class="big" style="margin:6px 0 14px">
+          <div><div class="num" id="sirenState">MATI</div><div class="unit">status relay</div></div>
+        </div>
+        <div class="siren-row">
+          <button class="btn btn-siren" onclick="setSiren('ON')">🔔 Bunyikan (ON)</button>
+          <button class="btn btn-off" onclick="setSiren('OFF')">Matikan (OFF)</button>
+        </div>
+        <div style="color:var(--amber);font-size:11.5px;margin-top:12px">⚠ Sirine hanya berbunyi dari perintah manual (lokal/MQTT). Tidak pernah otomatis dari sensor.</div>
+      </div>
+    </div>
+
+    <!-- ===== JSON terakhir + serial ===== -->
+    <div class="wide">
+      <div class="log">
+        <h3>📤 JSON Terakhir Dipublish</h3>
+        <div class="serial" style="color:var(--text)">{<br>
+        &nbsp;&nbsp;"id": "slm-01", "kabupaten": "sleman", "kecamatan": "pakem",<br>
+        &nbsp;&nbsp;"ts": 1760003200, "seq": 1234,<br>
+        &nbsp;&nbsp;"weather": { "temp": 27.4, "hum": 82.1, "press": 1008.3 },<br>
+        &nbsp;&nbsp;"power": { "batt_v": 12.8, "pv_v": 18.2, "soc": 87 },<br>
+        &nbsp;&nbsp;"health": { "rssi": -92, "snr": 7.5, "uptime": 3600, "fw": "0.1.0" }<br>
+        }</div>
+        <div class="dim" style="font-size:11px;margin-top:8px">→ topic <span class="mini">yg2ufh/ews/sleman/slm-01/data</span></div>
+      </div>
+
+      <div class="log">
+        <h3>🖥️ Log Serial</h3>
+        <div class="serial" id="serial">
+          <div><span class="rx">&lt;-- Rx</span> slm-01 DATA seq=1234 (RSSI -92 SNR 7.5)</div>
+          <div><span class="tx">--&gt; MQTT</span> publish .../slm-01/data OK</div>
+          <div><span class="rx">&lt;-- Rx</span> slm-02 DATA seq=0991 (RSSI -78 SNR 9.1)</div>
+          <div><span class="tx">--&gt; MQTT</span> publish .../slm-02/data OK</div>
+          <div><span class="warnl">[WiFi]</span> RSSI -58 dBm · stabil</div>
+          <div><span class="tx">--&gt; MQTT</span> status slm-gw-01 = online (retained)</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ===== footer actions ===== -->
+    <div class="foot">
+      <button class="btn btn-blue" onclick="alert('Mockup: buka halaman Setup/Config lagi')">⚙️ Buka Setting</button>
+      <button class="btn btn-ghost" onclick="alert('Mockup: reboot perangkat')">↻ Reboot</button>
+      <button class="btn btn-ghost" onclick="alert('Mockup: hapus config → kembali ke mode AP')">⚠ Reset Config (ke mode AP)</button>
+    </div>
+  </div>
+
+<script>
+  function tick(){
+    const d=new Date(), el=document.getElementById('clock'); if(!el)return;
+    el.textContent=d.toLocaleDateString('id-ID',{day:'2-digit',month:'short'})+' · '+d.toLocaleTimeString('id-ID',{hour12:false});
+  }
+  setInterval(tick,1000); tick();
+  function setSiren(cmd){
+    const s=document.getElementById('sirenState');
+    const on=cmd==='ON';
+    s.textContent=on?'BUNYI':'MATI';
+    s.style.color=on?'var(--accent)':'var(--text)';
+    const line=document.createElement('div');
+    line.innerHTML='<span class="warnl">[SIREN]</span> perintah manual '+cmd+' → relay GPA4 '+(on?'HIGH':'LOW');
+    const sv=document.getElementById('serial'); sv.insertBefore(line,sv.firstChild);
+  }
+</script>
+</body>
+</html>

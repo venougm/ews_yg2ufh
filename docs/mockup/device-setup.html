@@ -1,0 +1,406 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Mockup — Web Config T-Beam EWS (Mode AP)</title>
+<style>
+  :root{
+    --bg:#121417; --panel:#1c2025; --panel2:#22272e; --border:#2c333b;
+    --accent:#e23b3b; --accent-soft:rgba(226,59,59,.14);
+    --text:#e6edf3; --dim:#8b949e; --green:#2ea043; --amber:#d29922; --blue:#2f81f7;
+  }
+  *{box-sizing:border-box}
+  body{margin:0;background:var(--bg);color:var(--text);
+    font-family:"Inter",system-ui,"Segoe UI",Roboto,sans-serif;font-size:14px}
+  .mock-note{background:#3a2416;color:#f0d9b5;text-align:center;
+    padding:6px;font-size:12.5px;border-bottom:1px solid var(--amber)}
+  .topbar{display:flex;align-items:center;gap:14px;background:var(--panel2);
+    padding:12px 22px;border-bottom:1px solid var(--border)}
+  .brand{color:var(--accent);font-weight:700;font-size:21px;letter-spacing:1px}
+  .title{font-weight:600;font-size:16px}
+  .spacer{flex:1}
+  .ap-badge{font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.5px;
+    padding:3px 10px;border-radius:20px;border:1px solid var(--amber);color:var(--amber);
+    background:rgba(210,153,34,.14)}
+  .wrap{padding:18px 22px;max-width:760px;margin:0 auto}
+
+  .apinfo{display:flex;gap:14px;align-items:flex-start;background:var(--panel2);
+    border:1px solid var(--border);border-radius:12px;padding:14px 18px;margin-bottom:18px}
+  .apinfo .ico{font-size:26px;line-height:1}
+  .apinfo b{color:var(--text)}
+  .apinfo .k{color:var(--dim);font-size:12px}
+  .apinfo code{background:var(--bg);border:1px solid var(--border);border-radius:5px;
+    padding:1px 6px;font-family:Consolas,monospace;color:var(--blue)}
+
+  .card{background:var(--panel);border:1px solid var(--border);border-radius:14px;
+    padding:6px 20px 18px;margin-bottom:16px}
+  .sec-head{display:flex;align-items:center;gap:10px;cursor:pointer;
+    padding:14px 0 10px;user-select:none}
+  .sec-head h3{margin:0;font-size:15px;display:flex;align-items:center;gap:9px}
+  .sec-head .chev{margin-left:auto;color:var(--dim);transition:transform .15s}
+  .card.collapsed .chev{transform:rotate(-90deg)}
+  .card.collapsed .sec-body{display:none}
+  .sec-sub{color:var(--dim);font-size:12px;margin:-4px 0 10px}
+
+  .row2{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+  @media(max-width:620px){.row2{grid-template-columns:1fr}}
+  .field{margin-top:12px}
+  .field label{display:block;font-size:12px;color:var(--dim);margin-bottom:4px}
+  .inp,select{width:100%;background:var(--panel2);border:1px solid var(--border);border-radius:8px;
+    color:var(--text);padding:10px 12px;font-size:14px;font-family:inherit}
+  .inp:focus,select:focus{outline:none;border-color:var(--blue)}
+  .hint{font-size:11px;color:var(--dim);margin-top:4px}
+
+  .switch{display:flex;align-items:center;gap:10px;margin-top:12px}
+  .toggle{position:relative;width:42px;height:23px;flex:0 0 42px}
+  .toggle input{opacity:0;width:0;height:0}
+  .slider{position:absolute;inset:0;background:var(--panel2);border:1px solid var(--border);
+    border-radius:23px;cursor:pointer;transition:.15s}
+  .slider:before{content:"";position:absolute;height:17px;width:17px;left:2px;top:2px;
+    background:var(--dim);border-radius:50%;transition:.15s}
+  .toggle input:checked + .slider{background:var(--accent-soft);border-color:var(--accent)}
+  .toggle input:checked + .slider:before{transform:translateX(19px);background:var(--accent)}
+  .switch .lbl{font-size:13.5px}
+  .switch .lbl small{display:block;color:var(--dim);font-size:11px}
+
+  .role-pick{display:flex;gap:12px;margin-top:10px}
+  .role-opt{flex:1;border:1.5px solid var(--border);border-radius:12px;padding:14px;cursor:pointer;
+    text-align:center;transition:.15s;background:var(--panel2)}
+  .role-opt.active{border-color:var(--accent);background:var(--accent-soft)}
+  .role-opt .rt{font-weight:700;font-size:15px}
+  .role-opt .rd{font-size:11.5px;color:var(--dim);margin-top:4px}
+
+  .sensor-grid{display:grid;grid-template-columns:1fr 1fr;gap:8px 18px}
+  @media(max-width:620px){.sensor-grid{grid-template-columns:1fr}}
+
+  .btn{border-radius:8px;padding:11px 16px;font-weight:600;font-size:14px;cursor:pointer;
+    border:1px solid;font-family:inherit}
+  .btn-primary{background:var(--blue);border-color:var(--blue);color:#fff}
+  .btn-ghost{background:transparent;border-color:var(--border);color:var(--dim)}
+  .btn-danger{background:#2a1416;border-color:var(--accent);color:var(--accent)}
+  .actionbar{display:flex;gap:10px;position:sticky;bottom:0;background:linear-gradient(transparent,var(--bg) 24%);
+    padding:18px 0 10px;margin-top:4px}
+  .actionbar .btn-primary{flex:1}
+
+  .depend{opacity:.45;pointer-events:none;transition:opacity .15s}
+  .depend.on{opacity:1;pointer-events:auto}
+  .tag{font-size:10px;font-weight:700;padding:1px 7px;border-radius:10px;letter-spacing:.3px}
+  .tag-gw{background:var(--accent-soft);color:var(--accent);border:1px solid var(--accent)}
+  .tag-node{background:rgba(47,129,247,.14);color:var(--blue);border:1px solid var(--blue)}
+  .tag-both{background:var(--panel2);color:var(--dim);border:1px solid var(--border)}
+
+  /* toast apply */
+  .toast{position:fixed;left:50%;bottom:28px;transform:translateX(-50%) translateY(80px);
+    background:var(--panel);border:1px solid var(--green);color:var(--text);border-radius:12px;
+    padding:14px 20px;box-shadow:0 10px 30px rgba(0,0,0,.5);transition:transform .25s;z-index:50;
+    max-width:90vw}
+  .toast.show{transform:translateX(-50%) translateY(0)}
+  .toast b{color:var(--green)}
+  .toast .dim{color:var(--dim);font-size:12px;margin-top:4px}
+</style>
+</head>
+<body>
+  <div class="mock-note">⚠ MOCKUP — tampilan web config yang muncul saat T-Beam mode AP. Belum terhubung ke firmware; tombol hanya simulasi. Untuk review desain.</div>
+
+  <div class="topbar">
+    <span class="brand">YG2UFH</span>
+    <span class="title">Setup Perangkat EWS</span>
+    <span class="spacer"></span>
+    <span class="ap-badge">● Mode AP</span>
+  </div>
+
+  <div class="wrap">
+    <div class="apinfo">
+      <span class="ico">📶</span>
+      <div>
+        <div><b>Perangkat dalam mode Access Point.</b> Isi form di bawah, lalu tekan <b>Simpan &amp; Jalankan</b>.</div>
+        <div class="k" style="margin-top:8px">
+          Terhubung ke WiFi <code>EWS-slm-01</code> · buka <code>http://192.168.4.1</code> ·
+          sandi AP <code>1234567890</code>. Setelah disimpan, alat reboot jadi <b>client WiFi</b> dan mulai bekerja.
+        </div>
+      </div>
+    </div>
+
+    <!-- ============ PERAN ============ -->
+    <div class="card">
+      <div class="sec-head" onclick="toggleSec(this)">
+        <h3>🧭 Peran Perangkat</h3><span class="chev">▾</span>
+      </div>
+      <div class="sec-body">
+        <div class="sec-sub">Satu firmware, peran dipilih di sini (bukan dari jumper PCB).</div>
+        <div class="role-pick">
+          <div class="role-opt" id="roleNode" onclick="pickRole('node')">
+            <div class="rt">📡 NODE</div>
+            <div class="rd">Baca sensor di lapangan, kirim ke gateway via LoRa (atau WiFi bila ada).</div>
+          </div>
+          <div class="role-opt active" id="roleGw" onclick="pickRole('gateway')">
+            <div class="rt">🛰️ GATEWAY</div>
+            <div class="rd">Terima LoRa dari node, teruskan ke MQTT internet. Kelola sirine.</div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ============ IDENTITAS ============ -->
+    <div class="card">
+      <div class="sec-head" onclick="toggleSec(this)">
+        <h3>🪪 Identitas &amp; Lokasi</h3><span class="chev">▾</span>
+      </div>
+      <div class="sec-body">
+        <div class="sec-sub">node_id harus UNIK se-sistem (prefix kabupaten). Wilayah dipilih dari <b>dropdown bertingkat</b> (bukan ketik bebas) agar tidak ada typo — kabupaten masuk ke topic MQTT. Koordinat diisi manual oleh operator.</div>
+        <div class="row2">
+          <div class="field"><label>node_id</label><input class="inp" value="slm-gw-01"></div>
+          <div class="field"><label>Nama lokasi (deskripsi bebas)</label><input class="inp" value="Pos Induk Kaliurang"></div>
+        </div>
+        <div class="row2">
+          <div class="field"><label>Provinsi</label>
+            <select id="selProv" onchange="fillKab()"></select>
+          </div>
+          <div class="field"><label>Kabupaten / Kota <span class="dim">(→ topic MQTT)</span></label>
+            <select id="selKab" onchange="fillKec()"></select>
+          </div>
+        </div>
+        <div class="row2">
+          <div class="field"><label>Kecamatan</label>
+            <select id="selKec" onchange="fillKel()"></select>
+          </div>
+          <div class="field"><label>Kelurahan / Desa</label>
+            <select id="selKel"></select>
+          </div>
+        </div>
+        <div class="field"><label>network_id (pemisah jaringan LoRa)</label><input class="inp" value="yg2ufh-slm"></div>
+        <div class="row2">
+          <div class="field"><label>Latitude</label><input class="inp" value="-7.6900"></div>
+          <div class="field"><label>Longitude</label><input class="inp" value="110.4050"></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ============ WIFI ============ -->
+    <div class="card">
+      <div class="sec-head" onclick="toggleSec(this)">
+        <h3>🌐 WiFi Internet <span class="tag tag-both">semua peran</span></h3><span class="chev">▾</span>
+      </div>
+      <div class="sec-body">
+        <div class="sec-sub">Jaringan internet untuk client mode. GATEWAY wajib; NODE opsional (kalau ada WiFi, node bisa kirim langsung).</div>
+        <div class="row2">
+          <div class="field"><label>SSID</label><input class="inp" value="PosKaliurang-2G"></div>
+          <div class="field"><label>Password</label><input class="inp" type="password" value="rahasia123"></div>
+        </div>
+        <div class="switch">
+          <label class="toggle"><input type="checkbox" checked><span class="slider"></span></label>
+          <span class="lbl">Auto-AP fallback<small>Kalau WiFi gagal konek, perangkat kembali jadi AP agar bisa di-setting ulang.</small></span>
+        </div>
+      </div>
+    </div>
+
+    <!-- ============ MQTT ============ -->
+    <div class="card" id="cardMqtt">
+      <div class="sec-head" onclick="toggleSec(this)">
+        <h3>📨 MQTT <span class="tag tag-gw">gateway</span></h3><span class="chev">▾</span>
+      </div>
+      <div class="sec-body">
+        <div class="sec-sub">Broker server EWS. Data dipublish sebagai JSON ke <code style="font-family:Consolas,monospace;font-size:11px">yg2ufh/ews/&lt;kabupaten&gt;/&lt;node_id&gt;/data</code>.</div>
+        <div class="row2">
+          <div class="field"><label>Host broker</label><input class="inp" value="ews.yg2ufh.id"></div>
+          <div class="field"><label>Port</label><input class="inp" value="1883"></div>
+        </div>
+        <div class="row2">
+          <div class="field"><label>Username</label><input class="inp" value="ews"></div>
+          <div class="field"><label>Password</label><input class="inp" type="password" value="••••••"></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ============ LORA ============ -->
+    <div class="card">
+      <div class="sec-head" onclick="toggleSec(this)">
+        <h3>📻 Radio LoRa <span class="tag tag-both">semua peran</span></h3><span class="chev">▾</span>
+      </div>
+      <div class="sec-body">
+        <div class="sec-sub">Parameter harus SAMA di semua perangkat satu jaringan. Board 915 MHz.</div>
+        <div class="row2">
+          <div class="field"><label>Preset</label>
+            <select onchange="applyPreset(this.value)">
+              <option value="jauh" selected>Jangkauan jauh (SF10 / BW125) — default</option>
+              <option value="cepat">Cepat (SF7 / BW250)</option>
+              <option value="manual">Manual…</option>
+            </select>
+            <div class="hint">"Jauh" = tahan halangan pohon, data rate rendah. Cocok 500 m–1 km.</div>
+          </div>
+          <div class="field"><label>Frekuensi (MHz)</label><input class="inp" value="915.0"></div>
+        </div>
+        <div class="row2">
+          <div class="field"><label>Spreading Factor (SF)</label>
+            <select><option>7</option><option>8</option><option>9</option><option selected>10</option><option>11</option><option>12</option></select>
+          </div>
+          <div class="field"><label>Bandwidth</label>
+            <select><option selected>125 kHz</option><option>250 kHz</option><option>500 kHz</option></select>
+          </div>
+        </div>
+        <div class="row2">
+          <div class="field"><label>Coding Rate</label>
+            <select><option selected>4/5</option><option>4/6</option><option>4/7</option><option>4/8</option></select>
+          </div>
+          <div class="field"><label>TX Power (dBm)</label><input class="inp" value="20"></div>
+        </div>
+        <div class="switch">
+          <label class="toggle"><input type="checkbox" checked><span class="slider"></span></label>
+          <span class="lbl">CAD (cek kanal sebelum kirim)<small>Kurangi tabrakan paket antar node.</small></span>
+        </div>
+      </div>
+    </div>
+
+    <!-- ============ SENSOR ============ -->
+    <div class="card">
+      <div class="sec-head" onclick="toggleSec(this)">
+        <h3>🌦️ Sensor Aktif <span class="tag tag-both">semua peran</span></h3><span class="chev">▾</span>
+      </div>
+      <div class="sec-body">
+        <div class="sec-sub">Centang sensor yang terpasang. Field JSON hanya dikirim untuk sensor yang aktif.</div>
+        <div class="sensor-grid">
+          <div class="switch"><label class="toggle"><input type="checkbox" checked><span class="slider"></span></label><span class="lbl">BME280<small>suhu / kelembapan / tekanan</small></span></div>
+          <div class="switch"><label class="toggle"><input type="checkbox"><span class="slider"></span></label><span class="lbl">Gas MQ-135<small>ADC GPIO35</small></span></div>
+          <div class="switch"><label class="toggle"><input type="checkbox"><span class="slider"></span></label><span class="lbl">Rain gauge<small>pulsa GPIO33</small></span></div>
+          <div class="switch"><label class="toggle"><input type="checkbox"><span class="slider"></span></label><span class="lbl">Anemometer<small>pulsa GPIO32</small></span></div>
+          <div class="switch"><label class="toggle"><input type="checkbox" checked><span class="slider"></span></label><span class="lbl">EPEVER MPPT<small>RS485 / Modbus — tegangan aki &amp; PV</small></span></div>
+          <div class="switch"><label class="toggle"><input type="checkbox" checked><span class="slider"></span></label><span class="lbl">ADS1115<small>voltage-sense aki cadangan</small></span></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ============ SIRINE ============ -->
+    <div class="card">
+      <div class="sec-head" onclick="toggleSec(this)">
+        <h3>🔊 Sirine &amp; Audio <span class="tag tag-gw">umumnya gateway</span></h3><span class="chev">▾</span>
+      </div>
+      <div class="sec-body">
+        <div class="sec-sub" style="color:var(--amber)">⚠ Sirine HANYA berbunyi dari perintah manual operator (MQTT). Tidak pernah otomatis dari sensor.</div>
+        <div class="switch">
+          <label class="toggle"><input type="checkbox" id="sirenOn" checked onchange="dep('sirenDep',this.checked)"><span class="slider"></span></label>
+          <span class="lbl">Relay sirine eksternal<small>MCP23017 GPA4 → modul relay</small></span>
+        </div>
+        <div class="depend on" id="sirenDep">
+          <div class="switch"><label class="toggle"><input type="checkbox"><span class="slider"></span></label><span class="lbl">DFPlayer Mini (suara MP3)<small>UART GPIO2/15 + speaker</small></span></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ============ INTERVAL + ADMIN ============ -->
+    <div class="card collapsed">
+      <div class="sec-head" onclick="toggleSec(this)">
+        <h3>⚙️ Lanjutan</h3><span class="chev">▾</span>
+      </div>
+      <div class="sec-body">
+        <div class="row2">
+          <div class="field"><label>Interval kirim data (detik)</label><input class="inp" value="60"></div>
+          <div class="field"><label>Deteksi node hilang (× interval)</label><input class="inp" value="3"></div>
+        </div>
+        <div class="row2">
+          <div class="field"><label>Sandi web admin (kosong = tanpa login)</label><input class="inp" type="password"></div>
+          <div class="field"><label>Sandi Auto-AP</label><input class="inp" value="1234567890"></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ============ ACTIONS ============ -->
+    <div class="actionbar">
+      <button class="btn btn-ghost" onclick="alert('Mockup: unduh file config JSON')">⬇ Backup config</button>
+      <button class="btn btn-ghost" onclick="alert('Mockup: muat config dari file')">⬆ Restore</button>
+      <button class="btn btn-primary" onclick="doApply()">💾 Simpan &amp; Jalankan</button>
+    </div>
+    <div style="height:30px"></div>
+  </div>
+
+  <div class="toast" id="toast">
+    <div><b>✓ Config tersimpan.</b> Perangkat reboot…</div>
+    <div class="dim">Beralih dari AP ke WiFi client <b>PosKaliurang-2G</b>. Buka halaman status di IP baru alat.</div>
+  </div>
+
+<script>
+  function toggleSec(h){ h.parentElement.classList.toggle('collapsed'); }
+  let role='gateway';
+  function pickRole(r){
+    role=r;
+    document.getElementById('roleGw').classList.toggle('active',r==='gateway');
+    document.getElementById('roleNode').classList.toggle('active',r==='node');
+    // MQTT lebih relevan untuk gateway — beri penekanan visual (tetap bisa diisi node)
+    document.getElementById('cardMqtt').style.opacity = r==='gateway'?'1':'.7';
+  }
+  function dep(id,on){ document.getElementById(id).classList.toggle('on',on); }
+  function applyPreset(v){ /* mockup: preset hanya ilustrasi */ }
+  function doApply(){
+    const t=document.getElementById('toast'); t.classList.add('show');
+    setTimeout(()=>t.classList.remove('show'),4200);
+  }
+  pickRole('gateway');
+
+  /* =========================================================
+     WILAYAH BERTINGKAT (dropdown, bukan ketik bebas → anti-typo)
+     Mockup: hanya contoh sebagian (DIY / Sleman). Firmware asli
+     memuat daftar lengkap (Kemendagri/BPS) sebagai data JSON.
+     Struktur: Provinsi → Kabupaten → Kecamatan → Kelurahan/Desa.
+     "kode" = kode wilayah; "slug" dipakai di topic MQTT (kabupaten).
+     ========================================================= */
+  const WILAYAH = {
+    "diy": { nama:"DI Yogyakarta", kab:{
+      "sleman": { nama:"Sleman", kec:{
+        "pakem":   { nama:"Pakem",   kel:["Purwobinangun","Hargobinangun","Candibinangun","Harjobinangun","Pakembinangun"] },
+        "cangkringan": { nama:"Cangkringan", kel:["Umbulharjo","Kepuharjo","Glagaharjo","Wukirsari","Argomulyo"] },
+        "turi":    { nama:"Turi",    kel:["Bangunkerto","Donokerto","Girikerto","Wonokerto"] },
+        "depok":   { nama:"Depok",   kel:["Caturtunggal","Maguwoharjo","Condongcatur"] }
+      }},
+      "bantul": { nama:"Bantul", kec:{
+        "dlingo":  { nama:"Dlingo",  kel:["Dlingo","Mangunan","Muntuk","Temuwuh","Jatimulyo","Terong"] },
+        "imogiri": { nama:"Imogiri", kel:["Selopamioro","Sriharjo","Kebonagung","Karangtengah","Girirejo"] }
+      }},
+      "kulonprogo": { nama:"Kulon Progo", kec:{
+        "kokap":   { nama:"Kokap",   kel:["Hargomulyo","Hargorejo","Hargotirto","Hargowilis","Kalirejo"] },
+        "girimulyo": { nama:"Girimulyo", kel:["Jatimulyo","Giripurwo","Pendoworejo","Purwosari"] }
+      }},
+      "gunungkidul": { nama:"Gunungkidul", kec:{
+        "patuk":   { nama:"Patuk",   kel:["Nglanggeran","Ngoro-oro","Putat","Salam","Terbah"] }
+      }},
+      "kotayogya": { nama:"Kota Yogyakarta", kec:{
+        "umbulharjo": { nama:"Umbulharjo", kel:["Giwangan","Sorosutan","Pandeyan","Warungboto"] }
+      }}
+    }}
+  };
+
+  function opt(v,t){ const o=document.createElement('option'); o.value=v; o.textContent=t; return o; }
+  function fillProv(){
+    const s=document.getElementById('selProv'); s.innerHTML='';
+    for(const k in WILAYAH) s.appendChild(opt(k,WILAYAH[k].nama));
+    fillKab();
+  }
+  function fillKab(){
+    const prov=document.getElementById('selProv').value;
+    const s=document.getElementById('selKab'); s.innerHTML='';
+    const kab=WILAYAH[prov]?.kab||{};
+    for(const k in kab) s.appendChild(opt(k,kab[k].nama));
+    fillKec();
+  }
+  function fillKec(){
+    const prov=document.getElementById('selProv').value;
+    const kab=document.getElementById('selKab').value;
+    const s=document.getElementById('selKec'); s.innerHTML='';
+    const kec=WILAYAH[prov]?.kab[kab]?.kec||{};
+    for(const k in kec) s.appendChild(opt(k,kec[k].nama));
+    fillKel();
+  }
+  function fillKel(){
+    const prov=document.getElementById('selProv').value;
+    const kab=document.getElementById('selKab').value;
+    const kec=document.getElementById('selKec').value;
+    const s=document.getElementById('selKel'); s.innerHTML='';
+    const kel=WILAYAH[prov]?.kab[kab]?.kec[kec]?.kel||[];
+    kel.forEach(d=>s.appendChild(opt(d.toLowerCase().replace(/\s+/g,'-'),d)));
+  }
+  fillProv();
+  // set contoh default: Sleman / Pakem
+  document.getElementById('selKab').value='sleman'; fillKec();
+  document.getElementById('selKec').value='pakem'; fillKel();
+</script>
+</body>
+</html>

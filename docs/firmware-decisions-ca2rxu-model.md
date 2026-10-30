@@ -92,3 +92,45 @@ ArduinoJson, XPowersLib (AXP2101), TinyGPSPlus.
 4. NODE path: baca sensor aktif -> paket LoRa -> (atau WiFi/MQTT bila ada WiFi).
 5. GATEWAY path: terima LoRa -> JSON -> MQTT publish; subscribe siren/cmd.
 6. Failover WiFi<->LoRa.
+
+---
+
+## TAMBAHAN KEPUTUSAN (sesi mockup web config T-Beam)
+
+Tanggal dicatat: sesi desain mockup web UI perangkat. Status: FINAL.
+
+### A. Cara flash firmware ke T-Beam = WEB FLASHER (disetujui user)
+- **Web flasher (esp-web-tools)** sebagai cara UTAMA untuk operator/relawan lapangan:
+  halaman web statis YG2UFH (bisa di GitHub Pages) → "Connect" → "Install", cukup
+  browser Chrome/Edge + kabel USB, TANPA install IDE/driver toolchain.
+  Butuh output `firmware.bin` (merged) + `manifest.json` dari hasil `pio run`.
+- **PlatformIO/Arduino** tetap dipakai developer (kita) untuk coding/debug/iterasi.
+- Sejalan dgn technical-design.md §11 poin 7 ("Web flasher YG2UFH").
+- TODO saat firmware jadi: buat halaman web flasher (esp-web-tools) + manifest +
+  script build .bin gabungan (esptool merge_bin).
+
+### B. Wilayah WAJIB dropdown bertingkat (anti-typo) — PENTING
+- Field **Kabupaten/Kota, Kecamatan, Kelurahan/Desa** di web config HARUS berupa
+  **dropdown (select) bertingkat**, BUKAN input teks bebas. Alasan: kabupaten masuk
+  ke topic MQTT (`yg2ufh/ews/<kabupaten>/<node_id>/data`); typo = data node tidak
+  terbaca backend. Dropdown menghilangkan risiko salah ketik.
+- Struktur bertingkat: **Provinsi → Kabupaten/Kota → Kecamatan → Kelurahan/Desa**.
+  Pilih provinsi → opsi kabupaten terisi; pilih kabupaten → kecamatan terisi;
+  pilih kecamatan → kelurahan terisi.
+- **Kelurahan/Desa adalah field BARU** (sebelumnya skema cuma provinsi/kabupaten/
+  kecamatan). Tambahkan `kelurahan` sebagai METADATA di payload JSON (ikut kecamatan,
+  TIDAK masuk topic agar topic tidak terlalu dalam). Backend perlu menampung field
+  `kelurahan` ini (penyesuaian skema DB/dashboard menyusul).
+- Nilai yang dikirim (slug) vs label: dropdown tampilkan nama (mis. "Sleman"),
+  simpan slug (mis. "sleman") untuk topic/payload.
+- Sumber data wilayah: daftar resmi (Kemendagri/BPS) sebagai data JSON yang di-embed
+  di firmware (LittleFS) ATAU di-load dari backend. Mockup saat ini hanya contoh
+  sebagian (DIY/Sleman) — firmware asli muat daftar lengkap daerah yang dipakai.
+  Karena ukuran, pertimbangkan: embed hanya provinsi/kabupaten yang relevan, atau
+  fetch dari backend saat AP punya akses (opsional).
+
+### Mockup web UI perangkat (hasil sesi ini)
+- `docs/mockup/device-setup.html` = halaman Setup/Config (mode AP) — form ala CA2RXU.
+- `docs/mockup/device-status.html` = halaman Status/Dashboard (mode client).
+- Gaya mengikuti `docs/mockup/dashboard.html` (tema gelap, aksen merah YG2UFH, Inter,
+  Bahasa Indonesia). Firmware web UI asli (web_config.cpp) harus meniru tata letak ini.

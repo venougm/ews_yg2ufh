@@ -1,0 +1,110 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Web Flasher — EWS T-Beam YG2UFH</title>
+<style>
+  :root{
+    --bg:#121417; --panel:#1c2025; --panel2:#22272e; --border:#2c333b;
+    --accent:#e23b3b; --accent-soft:rgba(226,59,59,.14);
+    --text:#e6edf3; --dim:#8b949e; --green:#2ea043; --amber:#d29922; --blue:#2f81f7;
+  }
+  *{box-sizing:border-box}
+  body{margin:0;background:var(--bg);color:var(--text);
+    font-family:"Inter",system-ui,"Segoe UI",Roboto,sans-serif;font-size:15px;line-height:1.55}
+  .topbar{display:flex;align-items:center;gap:14px;background:var(--panel2);
+    padding:14px 22px;border-bottom:1px solid var(--border)}
+  .brand{color:var(--accent);font-weight:700;font-size:22px;letter-spacing:1px}
+  .title{font-weight:600;font-size:16px}
+  .wrap{padding:26px 22px;max-width:720px;margin:0 auto}
+  h1{font-size:23px;margin:0 0 4px}
+  .lead{color:var(--dim);margin:0 0 24px}
+  .card{background:var(--panel);border:1px solid var(--border);border-radius:14px;
+    padding:20px 22px;margin-bottom:18px}
+  .card h2{font-size:16px;margin:0 0 12px;display:flex;align-items:center;gap:9px}
+  .step{display:flex;gap:14px;margin-bottom:14px}
+  .step:last-child{margin-bottom:0}
+  .num{flex:0 0 28px;height:28px;border-radius:50%;background:var(--accent-soft);
+    border:1px solid var(--accent);color:var(--accent);font-weight:700;
+    display:flex;align-items:center;justify-content:center;font-size:14px}
+  .step .t{font-size:14px}
+  .step .t small{display:block;color:var(--dim);font-size:12.5px;margin-top:2px}
+  code{background:var(--bg);border:1px solid var(--border);border-radius:5px;
+    padding:1px 6px;font-family:Consolas,monospace;color:var(--blue);font-size:13px}
+  .flashbox{text-align:center;padding:26px 20px}
+  esp-web-install-button{--esp-tools-button-color:#fff;--esp-tools-button-background-color:var(--blue)}
+  .btn-fallback{display:inline-block;background:var(--blue);color:#fff;border:none;border-radius:9px;
+    padding:13px 26px;font-size:15px;font-weight:600;cursor:pointer;font-family:inherit}
+  .note{font-size:12.5px;color:var(--dim);margin-top:14px}
+  .warn{background:#3a2416;border:1px solid var(--amber);color:#f0d9b5;border-radius:10px;
+    padding:12px 16px;font-size:13px;margin-bottom:18px}
+  .ok{color:var(--green)} .amberc{color:var(--amber)}
+  .browser{display:flex;gap:10px;flex-wrap:wrap;margin-top:10px}
+  .chip{background:var(--panel2);border:1px solid var(--border);border-radius:20px;
+    padding:4px 12px;font-size:12.5px;color:var(--dim)}
+  .chip.good{border-color:var(--green);color:var(--green)}
+  a{color:var(--blue)}
+  .after{font-size:13.5px}
+  .after b{color:var(--text)}
+  footer{color:var(--dim);font-size:12px;text-align:center;padding:20px}
+</style>
+</head>
+<body>
+  <div class="topbar">
+    <span class="brand">YG2UFH</span>
+    <span class="title">Web Flasher — EWS T-Beam</span>
+  </div>
+
+  <div class="wrap">
+    <h1>Flash Firmware EWS ke T-Beam</h1>
+    <p class="lead">Pasang firmware EWS ke LilyGO T-Beam v1.2 langsung dari browser — tanpa install Arduino IDE, PlatformIO, atau driver. Cukup kabel USB.</p>
+
+    <div class="warn" id="browserWarn" style="display:none">
+      ⚠ Browser ini belum tentu mendukung WebSerial. Gunakan <b>Google Chrome</b> atau <b>Microsoft Edge</b> di komputer (bukan HP) agar tombol Install aktif.
+    </div>
+
+    <div class="card">
+      <h2>🔌 Cara pakai</h2>
+      <div class="step"><span class="num">1</span><div class="t">Colok T-Beam ke komputer pakai kabel USB<small>Pastikan kabel data (bukan kabel charge-only).</small></div></div>
+      <div class="step"><span class="num">2</span><div class="t">Klik tombol <b>Install</b> di bawah<small>Browser akan menanyakan port serial — pilih port T-Beam (biasanya "CP210x" atau "CH9102").</small></div></div>
+      <div class="step"><span class="num">3</span><div class="t">Tunggu proses flashing selesai<small>Jangan cabut USB sampai selesai. Setelah itu T-Beam reboot sendiri.</small></div></div>
+      <div class="step"><span class="num">4</span><div class="t">T-Beam jadi WiFi AP <code>EWS-&lt;node&gt;</code> / <code>YG2UFH-EWS-Setup</code><small>Sambungkan HP/laptop ke WiFi itu (sandi <code>1234567890</code>), buka <code>http://192.168.4.1</code> untuk setting.</small></div></div>
+    </div>
+
+    <div class="card flashbox">
+      <esp-web-install-button manifest="./manifest.json">
+        <button slot="activate" class="btn-fallback">⚡ Install Firmware EWS</button>
+        <span slot="unsupported">Browser tidak mendukung WebSerial — pakai Chrome/Edge desktop.</span>
+        <span slot="not-allowed">Flashing hanya bisa lewat HTTPS atau localhost.</span>
+      </esp-web-install-button>
+      <div class="browser">
+        <span class="chip good">✓ Chrome</span>
+        <span class="chip good">✓ Edge</span>
+        <span class="chip">✗ Firefox</span>
+        <span class="chip">✗ Safari</span>
+        <span class="chip">✗ HP/Android browser*</span>
+      </div>
+      <div class="note">*Sebagian Android+Chrome bisa dengan OTG; paling andal pakai komputer.</div>
+    </div>
+
+    <div class="card">
+      <h2>✅ Setelah flashing</h2>
+      <p class="after">Firmware default boot sebagai <b>Access Point</b>. Langkah setting pertama:</p>
+      <div class="step"><span class="num">A</span><div class="t">Sambung ke WiFi <code>YG2UFH-EWS-Setup</code> (sandi <code>1234567890</code>)</div></div>
+      <div class="step"><span class="num">B</span><div class="t">Buka <code>http://192.168.4.1</code> → form setup</div></div>
+      <div class="step"><span class="num">C</span><div class="t">Pilih peran (Node/Gateway), wilayah (dropdown), WiFi, MQTT, LoRa, sensor → <b>Simpan &amp; Jalankan</b></div></div>
+      <div class="step"><span class="num">D</span><div class="t">Perangkat reboot jadi WiFi client dan mulai kirim data</div></div>
+      <p class="note">Catatan: web flasher ini menanam firmware + aset web (SPIFFS) sekaligus bila <code>manifest.json</code> menyertakan image gabungan dengan SPIFFS. Lihat <code>BUILD.md</code>.</p>
+    </div>
+  </div>
+
+  <footer>EWS YG2UFH · firmware T-Beam v1.2 · flasher berbasis <a href="https://esphome.github.io/esp-web-tools/" target="_blank" rel="noopener">esp-web-tools</a></footer>
+
+  <script type="module" src="https://unpkg.com/esp-web-tools@10/dist/web/install-button.js?module"></script>
+  <script>
+    // peringatan browser (WebSerial hanya di Chromium desktop)
+    if(!('serial' in navigator)){ document.getElementById('browserWarn').style.display='block'; }
+  </script>
+</body>
+</html>
