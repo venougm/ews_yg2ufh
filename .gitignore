@@ -45,6 +45,7 @@ Thumbs.db
 .agents/
 .worktrees/
 
-# ---- Web flasher: binary besar, di-build on-demand (webflasher/build-merged-bin.ps1) ----
-webflasher/firmware-merged.bin
+# ---- Web flasher ----
+# firmware-merged.bin SENGAJA di-commit agar GitHub Pages bisa menyajikannya
+# (di-build dgn webflasher/build-merged-bin.ps1). spiffs.bin antara saja -> ignore.
 webflasher/spiffs.bin
