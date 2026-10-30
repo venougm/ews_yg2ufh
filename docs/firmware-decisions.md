@@ -1,16 +1,4 @@
-# Keputusan Firmware EWS — Model CA2RXU iGate (catatan dari user YG2UFH)
-
-Tanggal dicatat: lanjutan sesi desain. Status: KEPUTUSAN FINAL konsep, belum coding.
-
-## Ringkasan keputusan user
-
-Firmware EWS meniru **arsitektur CA2RXU LoRa APRS iGate** (`c:\aws-kiro\firm`),
-diadaptasi untuk EWS. Istilah dipetakan:
-
-| CA2RXU | EWS (nama kita) |
-|--------|-----------------|
-| iGate  | **GATEWAY** |
-| Tracker| **NODE** |
+# Keputusan Firmware EWS 
 
 ## Poin keputusan (dari user, verbatim-intent)
 
