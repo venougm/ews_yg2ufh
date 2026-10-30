@@ -7,6 +7,7 @@
 #include "wifi_manager.h"
 #include "lora.h"
 #include "mqtt.h"
+#include "web_config.h"
 #include "node.h"
 #include "gateway.h"
 
@@ -82,8 +83,10 @@ void setup() {
     // role selected by Config.identity.role. The MCP23017 role jumper is NEVER
     // consulted — role comes only from config.
     if (WiFiManager::isApMode()) {
-        // TODO(feat-004): start the AP-mode web configuration server here.
-        Serial.println("AP mode: web config placeholder (FEAT-004)");
+        // AP mode: serve the web configuration UI (FEAT-004). On "Simpan &
+        // Jalankan" the server saves the config and reboots into client mode.
+        Serial.println("AP mode: starting web config server");
+        WebConfig::setup();
         return;
     }
 
@@ -105,8 +108,11 @@ void setup() {
 void loop() {
     WiFiManager::checkWiFi();
 
-    // In AP mode there is no role loop yet (web config arrives in FEAT-004).
-    if (WiFiManager::isApMode()) return;
+    // In AP mode run only the web config server (service HTTP + handle reboot).
+    if (WiFiManager::isApMode()) {
+        WebConfig::loop();
+        return;
+    }
 
     if (Config.identity.role == 1) {
         Gateway::loop();

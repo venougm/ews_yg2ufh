@@ -1,0 +1,25 @@
+{
+  "id": "FEAT-004",
+  "type": "feat",
+  "description": "AP-mode web config GUI + README. Depends on FEAT-001 (Configuration load/save) and reads/writes the same config the roles use (FEAT-003). The GUI structure mirrors CA2RXU's web config (c:\\aws-kiro\\firm\\src\\web_utils.cpp + data/) but with EWS sections. After Apply/Save the device writes config and reboots into client mode. This feature finalizes the boot flow (unconfigured -> AP serving GUI -> apply -> reboot -> STA client).",
+  "steps": [
+    "Write include/web_config.h + src/web_config.cpp using the Arduino core WebServer (WebServer.h, port 80): start() in AP mode; GET /api/config serializes current Config to JSON; POST /api/config validates the body, applies to Config, calls Config.writeFile(), responds 200, then delay + ESP.restart() so the device boots into STA client mode; serve index.html/style.css/script.js from SPIFFS (root GET -> index.html). Mirror the AP->client switch concept from c:\\aws-kiro\\firm web_utils.",
+    "Write data/index.html: a sectioned settings form with sections Identity (role select NODE/GATEWAY, nodeId, networkId, provinsi, kabupaten, kecamatan, locationName, manual latitude/longitude), WiFi (SSID/password), MQTT (server/port/user/pass/clientId), LoRa (freq default 915, SF, BW, CR, TxPower, syncWord, CAD), Sensors (checkboxes: bme280/mq135/rain/anemo/tilt/ads1115/epever/gps + intervalSec), Siren (enabled + missThresholdSec), Thresholds (tiltSiaga/tiltAwas), Display (enabled/timeout/turn180). Mirror CA2RXU GUI layout/structure.",
+    "Write data/style.css (simple readable styling) and data/script.js: on load fetch GET /api/config and populate the form; on submit POST /api/config as JSON and show a 'saved, rebooting' message.",
+    "Wire src/main.cpp: when the device is unconfigured or has no WiFi connection, run WebConfig::start()/loop() in the AP branch (this completes the boot flow started in FEAT-001).",
+    "Write README.md documenting: build/flash (`python -m platformio run`, and `pio run -t uploadfs` for SPIFFS web assets), the two roles, the AP->client config flow, the MQTT topic scheme + JSON payload shape, the LoRa compact packet format (identical wording to include/ews_packet.h), the siren MANUAL-ONLY rule, and a board_pinout.h reference.",
+    "Run the build and fix any errors until green."
+  ],
+  "status": "pending",
+  "acceptance_criteria": [
+    "GET /api/config returns the current config as JSON and POST /api/config saves via Config.writeFile() then reboots into client mode.",
+    "data/index.html has all sections listed (Identity, WiFi, MQTT, LoRa, Sensors, Siren, Thresholds, Display); sensors and siren are independent toggles not tied to role.",
+    "README.md documents the MQTT scheme, the LoRa compact packet format (matching ews_packet.h), the siren MANUAL-ONLY rule, and the build/verify commands.",
+    "`python -m platformio run -e ttgo-t-beam-ews` compiles with 0 errors."
+  ],
+  "verification": [
+    "python -m platformio run -e ttgo-t-beam-ews -d c:\\aws-kiro\\EWS_YG2UFH\\.worktrees\\ews-firmware\\firmware  -> SUCCESS, 0 errors."
+  ],
+  "blocked_reason": null,
+  "findings": ""
+}

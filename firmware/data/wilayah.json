@@ -1,0 +1,43 @@
+{
+  "_comment": "Wilayah tree for the cascading Provinsi -> Kabupaten -> Kecamatan -> Kelurahan dropdowns in the AP setup form. Each entry has a display name (nama) and the stored value is the object key = lowercase slug. The kabupaten slug goes into the MQTT topic yg2ufh/ews/<kabupaten>/<node_id>/data, so slugs must be stable. This seed matches docs/mockup/device-setup.html (DIY sample only). Drop in the full Kemendagri/BPS list here later; served verbatim by GET /api/wilayah and loaded by script.js.",
+  "diy": {
+    "nama": "DI Yogyakarta",
+    "kab": {
+      "sleman": {
+        "nama": "Sleman",
+        "kec": {
+          "pakem": { "nama": "Pakem", "kel": { "purwobinangun": "Purwobinangun", "hargobinangun": "Hargobinangun", "candibinangun": "Candibinangun", "harjobinangun": "Harjobinangun", "pakembinangun": "Pakembinangun" } },
+          "cangkringan": { "nama": "Cangkringan", "kel": { "umbulharjo": "Umbulharjo", "kepuharjo": "Kepuharjo", "glagaharjo": "Glagaharjo", "wukirsari": "Wukirsari", "argomulyo": "Argomulyo" } },
+          "turi": { "nama": "Turi", "kel": { "bangunkerto": "Bangunkerto", "donokerto": "Donokerto", "girikerto": "Girikerto", "wonokerto": "Wonokerto" } },
+          "depok": { "nama": "Depok", "kel": { "caturtunggal": "Caturtunggal", "maguwoharjo": "Maguwoharjo", "condongcatur": "Condongcatur" } }
+        }
+      },
+      "bantul": {
+        "nama": "Bantul",
+        "kec": {
+          "dlingo": { "nama": "Dlingo", "kel": { "dlingo": "Dlingo", "mangunan": "Mangunan", "muntuk": "Muntuk", "temuwuh": "Temuwuh", "jatimulyo": "Jatimulyo", "terong": "Terong" } },
+          "imogiri": { "nama": "Imogiri", "kel": { "selopamioro": "Selopamioro", "sriharjo": "Sriharjo", "kebonagung": "Kebonagung", "karangtengah": "Karangtengah", "girirejo": "Girirejo" } }
+        }
+      },
+      "kulonprogo": {
+        "nama": "Kulon Progo",
+        "kec": {
+          "kokap": { "nama": "Kokap", "kel": { "hargomulyo": "Hargomulyo", "hargorejo": "Hargorejo", "hargotirto": "Hargotirto", "hargowilis": "Hargowilis", "kalirejo": "Kalirejo" } },
+          "girimulyo": { "nama": "Girimulyo", "kel": { "jatimulyo": "Jatimulyo", "giripurwo": "Giripurwo", "pendoworejo": "Pendoworejo", "purwosari": "Purwosari" } }
+        }
+      },
+      "gunungkidul": {
+        "nama": "Gunungkidul",
+        "kec": {
+          "patuk": { "nama": "Patuk", "kel": { "nglanggeran": "Nglanggeran", "ngorooro": "Ngoro-oro", "putat": "Putat", "salam": "Salam", "terbah": "Terbah" } }
+        }
+      },
+      "kotayogya": {
+        "nama": "Kota Yogyakarta",
+        "kec": {
+          "umbulharjo": { "nama": "Umbulharjo", "kel": { "giwangan": "Giwangan", "sorosutan": "Sorosutan", "pandeyan": "Pandeyan", "warungboto": "Warungboto" } }
+        }
+      }
+    }
+  }
+}

@@ -88,3 +88,48 @@ Supporting changes:
 
 No new build fixes were required beyond the FEAT-002 ones; the build was green on
 the first run after the new modules were added.
+
+## FEAT-004 (AP-mode web config GUI + README) — items 12, 14
+
+Command:
+`python -m platformio run -e ttgo-t-beam-ews -d c:\aws-kiro\EWS_YG2UFH\.worktrees\ews-firmware\firmware`
+
+Result: **SUCCESS, 0 errors.**
+
+- RAM:   3.7% (48336 / 1310720 bytes)
+- Flash: 51.3% (1009165 / 1966080 bytes)
+- Took ~69 s.
+
+What landed:
+- Item 12 (web_config): src/web_config.cpp + include/web_config.h — AP-mode HTTP
+  server on port 80 using WebServer.h (Arduino core; linked as libWebServer.a).
+  Routes: GET / (+/index.html) serves the setup form; GET /style.css,
+  /script.js, /wilayah.json stream SPIFFS assets; GET /api/config returns the
+  live Configuration as JSON in the exact writeFile() shape; GET /api/wilayah
+  streams the wilayah tree; POST /api/config validates (node_id + kabupaten
+  required, role 0/1), applies field-by-field with current-value fallback, saves
+  via Config.writeFile(), responds, then reboots to client mode (deferred ~1.2 s
+  via loop() so the HTTP response flushes first). onNotFound redirects to /.
+  Wired into main.cpp: AP mode now calls WebConfig::setup() in setup() and
+  WebConfig::loop() in loop() (replacing the FEAT-003 placeholder).
+- Web assets mirror the approved mockups (docs/mockup/device-setup.html):
+  data/index.html (sectioned collapsible form: Peran, Identitas+Lokasi, WiFi+
+  Auto-AP, MQTT, LoRa preset+SF/BW/CR/power/freq/CAD, Sensor flags, Siren
+  MANUAL-ONLY note, Lanjutan), data/style.css (dark theme --bg #121417 /
+  --panel #1c2025 / --accent #e23b3b, Inter font, Bahasa Indonesia),
+  data/script.js (loads /api/config + /api/wilayah, renders, POSTs).
+- DECISION 1 (wilayah cascading dropdowns): data/wilayah.json seeded with the
+  same DIY sample as the mockup (Sleman/Bantul/Kulon Progo/Gunungkidul/Kota
+  Yogya + kecamatan + kelurahan). script.js implements Provinsi -> Kabupaten ->
+  Kecamatan -> Kelurahan cascading <select>s; options show the display name,
+  submitted/stored value is the lowercase slug. kelurahan is saved into Identity.
+- Item 14 (README.md): build/flash (pio run, upload, uploadfs), DECISION 2 web
+  flasher output (esptool merge_bin -> firmware-merged.bin + manifest.json for
+  esp-web-tools, plus optional spiffs.bin), roles, AP->client config flow,
+  wilayah dropdown rationale, HTTP API table, MQTT topic scheme + JSON shape
+  (kelurahan = payload metadata NOT in topic), LoRa compact packet format, siren
+  MANUAL-ONLY note, pin map reference.
+
+No build fixes were required; the build was green on the first run after the
+web_config module + main.cpp wiring were added. WebServer.h resolved from the
+Arduino core with no new lib_deps.

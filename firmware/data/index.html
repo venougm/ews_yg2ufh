@@ -1,0 +1,230 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Setup Perangkat EWS — YG2UFH</title>
+<link rel="stylesheet" href="/style.css" />
+</head>
+<body>
+  <div class="topbar">
+    <span class="brand">YG2UFH</span>
+    <span class="title">Setup Perangkat EWS</span>
+    <span class="spacer"></span>
+    <span class="ap-badge">● Mode AP</span>
+  </div>
+
+  <div class="wrap">
+    <div class="apinfo">
+      <span class="ico">📶</span>
+      <div>
+        <div><b>Perangkat dalam mode Access Point.</b> Isi form di bawah, lalu tekan <b>Simpan &amp; Jalankan</b>.</div>
+        <div class="k" style="margin-top:8px">
+          Buka <code>http://192.168.4.1</code> · sandi AP default <code>1234567890</code>.
+          Setelah disimpan, alat reboot jadi <b>client WiFi</b> dan mulai bekerja.
+        </div>
+      </div>
+    </div>
+
+    <!-- ============ PERAN ============ -->
+    <div class="card">
+      <div class="sec-head" onclick="toggleSec(this)">
+        <h3>🧭 Peran Perangkat</h3><span class="chev">▾</span>
+      </div>
+      <div class="sec-body">
+        <div class="sec-sub">Satu firmware, peran dipilih di sini (bukan dari jumper PCB).</div>
+        <div class="role-pick">
+          <div class="role-opt" id="roleNode" onclick="pickRole(0)">
+            <div class="rt">📡 NODE</div>
+            <div class="rd">Baca sensor di lapangan, kirim ke gateway via LoRa (atau WiFi bila ada).</div>
+          </div>
+          <div class="role-opt" id="roleGw" onclick="pickRole(1)">
+            <div class="rt">🛰️ GATEWAY</div>
+            <div class="rd">Terima LoRa dari node, teruskan ke MQTT internet. Kelola sirine.</div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ============ IDENTITAS ============ -->
+    <div class="card">
+      <div class="sec-head" onclick="toggleSec(this)">
+        <h3>🪪 Identitas &amp; Lokasi</h3><span class="chev">▾</span>
+      </div>
+      <div class="sec-body">
+        <div class="sec-sub">node_id harus UNIK se-sistem (prefix kabupaten). Wilayah dipilih dari <b>dropdown bertingkat</b> (bukan ketik bebas) agar tidak ada typo — kabupaten masuk ke topic MQTT. Koordinat diisi manual oleh operator.</div>
+        <div class="row2">
+          <div class="field"><label>node_id</label><input class="inp" id="nodeId" placeholder="slm-gw-01"></div>
+          <div class="field"><label>Nama lokasi (deskripsi bebas)</label><input class="inp" id="locationName" placeholder="Pos Induk Kaliurang"></div>
+        </div>
+        <div class="row2">
+          <div class="field"><label>Provinsi</label>
+            <select id="selProv" onchange="fillKab()"></select>
+          </div>
+          <div class="field"><label>Kabupaten / Kota <span class="dim">(→ topic MQTT)</span></label>
+            <select id="selKab" onchange="fillKec()"></select>
+          </div>
+        </div>
+        <div class="row2">
+          <div class="field"><label>Kecamatan</label>
+            <select id="selKec" onchange="fillKel()"></select>
+          </div>
+          <div class="field"><label>Kelurahan / Desa</label>
+            <select id="selKel"></select>
+          </div>
+        </div>
+        <div class="field"><label>network_id (pemisah jaringan LoRa)</label><input class="inp" id="networkId" placeholder="ews1"></div>
+        <div class="row2">
+          <div class="field"><label>Latitude</label><input class="inp" id="latitude" placeholder="-7.6900"></div>
+          <div class="field"><label>Longitude</label><input class="inp" id="longitude" placeholder="110.4050"></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ============ WIFI ============ -->
+    <div class="card">
+      <div class="sec-head" onclick="toggleSec(this)">
+        <h3>🌐 WiFi Internet <span class="tag tag-both">semua peran</span></h3><span class="chev">▾</span>
+      </div>
+      <div class="sec-body">
+        <div class="sec-sub">Jaringan internet untuk client mode. GATEWAY wajib; NODE opsional (kalau ada WiFi, node bisa kirim langsung).</div>
+        <div class="row2">
+          <div class="field"><label>SSID</label><input class="inp" id="wifiSsid"></div>
+          <div class="field"><label>Password</label><input class="inp" id="wifiPassword" type="password"></div>
+        </div>
+        <div class="switch">
+          <label class="toggle"><input type="checkbox" id="autoApEnabled"><span class="slider"></span></label>
+          <span class="lbl">Auto-AP fallback<small>Kalau WiFi gagal konek, perangkat kembali jadi AP agar bisa di-setting ulang.</small></span>
+        </div>
+      </div>
+    </div>
+
+    <!-- ============ MQTT ============ -->
+    <div class="card" id="cardMqtt">
+      <div class="sec-head" onclick="toggleSec(this)">
+        <h3>📨 MQTT <span class="tag tag-gw">gateway</span></h3><span class="chev">▾</span>
+      </div>
+      <div class="sec-body">
+        <div class="sec-sub">Broker server EWS. Data dipublish sebagai JSON ke <code style="font-family:Consolas,monospace;font-size:11px">yg2ufh/ews/&lt;kabupaten&gt;/&lt;node_id&gt;/data</code>.</div>
+        <div class="switch">
+          <label class="toggle"><input type="checkbox" id="mqttActive"><span class="slider"></span></label>
+          <span class="lbl">Aktifkan MQTT<small>Publish ke broker saat ada WiFi.</small></span>
+        </div>
+        <div class="row2">
+          <div class="field"><label>Host broker</label><input class="inp" id="mqttServer" placeholder="ews.yg2ufh.id"></div>
+          <div class="field"><label>Port</label><input class="inp" id="mqttPort" placeholder="1883"></div>
+        </div>
+        <div class="row2">
+          <div class="field"><label>Username</label><input class="inp" id="mqttUsername"></div>
+          <div class="field"><label>Password</label><input class="inp" id="mqttPassword" type="password"></div>
+        </div>
+        <div class="field"><label>Client ID (kosong = otomatis dari node_id)</label><input class="inp" id="mqttClientId"></div>
+      </div>
+    </div>
+
+    <!-- ============ LORA ============ -->
+    <div class="card">
+      <div class="sec-head" onclick="toggleSec(this)">
+        <h3>📻 Radio LoRa <span class="tag tag-both">semua peran</span></h3><span class="chev">▾</span>
+      </div>
+      <div class="sec-body">
+        <div class="sec-sub">Parameter harus SAMA di semua perangkat satu jaringan. Board 915 MHz.</div>
+        <div class="row2">
+          <div class="field"><label>Preset</label>
+            <select id="loraPreset" onchange="applyPreset(this.value)">
+              <option value="jauh">Jangkauan jauh (SF10 / BW125) — default</option>
+              <option value="cepat">Cepat (SF7 / BW250)</option>
+              <option value="manual">Manual…</option>
+            </select>
+            <div class="hint">"Jauh" = tahan halangan pohon, data rate rendah. Cocok 500 m–1 km.</div>
+          </div>
+          <div class="field"><label>Frekuensi (MHz)</label><input class="inp" id="loraFreqMhz" placeholder="915.0"></div>
+        </div>
+        <div class="row2">
+          <div class="field"><label>Spreading Factor (SF)</label>
+            <select id="loraSf"><option>7</option><option>8</option><option>9</option><option>10</option><option>11</option><option>12</option></select>
+          </div>
+          <div class="field"><label>Bandwidth</label>
+            <select id="loraBw"><option value="125000">125 kHz</option><option value="250000">250 kHz</option><option value="500000">500 kHz</option></select>
+          </div>
+        </div>
+        <div class="row2">
+          <div class="field"><label>Coding Rate</label>
+            <select id="loraCr"><option value="5">4/5</option><option value="6">4/6</option><option value="7">4/7</option><option value="8">4/8</option></select>
+          </div>
+          <div class="field"><label>TX Power (dBm)</label><input class="inp" id="loraPower" placeholder="20"></div>
+        </div>
+        <div class="switch">
+          <label class="toggle"><input type="checkbox" id="loraCad"><span class="slider"></span></label>
+          <span class="lbl">CAD (cek kanal sebelum kirim)<small>Kurangi tabrakan paket antar node.</small></span>
+        </div>
+      </div>
+    </div>
+
+    <!-- ============ SENSOR ============ -->
+    <div class="card">
+      <div class="sec-head" onclick="toggleSec(this)">
+        <h3>🌦️ Sensor Aktif <span class="tag tag-both">semua peran</span></h3><span class="chev">▾</span>
+      </div>
+      <div class="sec-body">
+        <div class="sec-sub">Centang sensor yang terpasang. Field JSON hanya dikirim untuk sensor yang aktif.</div>
+        <div class="sensor-grid">
+          <div class="switch"><label class="toggle"><input type="checkbox" id="senBme280"><span class="slider"></span></label><span class="lbl">BME280<small>suhu / kelembapan / tekanan</small></span></div>
+          <div class="switch"><label class="toggle"><input type="checkbox" id="senMq135"><span class="slider"></span></label><span class="lbl">Gas MQ-135<small>ADC GPIO35</small></span></div>
+          <div class="switch"><label class="toggle"><input type="checkbox" id="senRain"><span class="slider"></span></label><span class="lbl">Rain gauge<small>pulsa GPIO33</small></span></div>
+          <div class="switch"><label class="toggle"><input type="checkbox" id="senAnemo"><span class="slider"></span></label><span class="lbl">Anemometer<small>pulsa GPIO32</small></span></div>
+          <div class="switch"><label class="toggle"><input type="checkbox" id="senTilt"><span class="slider"></span></label><span class="lbl">Tilt / kemiringan<small>sumbu X/Y</small></span></div>
+          <div class="switch"><label class="toggle"><input type="checkbox" id="senEpever"><span class="slider"></span></label><span class="lbl">EPEVER MPPT<small>RS485 / Modbus — tegangan aki &amp; PV</small></span></div>
+          <div class="switch"><label class="toggle"><input type="checkbox" id="senAds1115"><span class="slider"></span></label><span class="lbl">ADS1115<small>voltage-sense aki cadangan</small></span></div>
+          <div class="switch"><label class="toggle"><input type="checkbox" id="senGps"><span class="slider"></span></label><span class="lbl">GPS NEO-6M<small>koordinat &amp; fix</small></span></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ============ SIRINE ============ -->
+    <div class="card">
+      <div class="sec-head" onclick="toggleSec(this)">
+        <h3>🔊 Sirine &amp; Audio <span class="tag tag-gw">umumnya gateway</span></h3><span class="chev">▾</span>
+      </div>
+      <div class="sec-body">
+        <div class="sec-sub" style="color:var(--amber)">⚠ Sirine HANYA berbunyi dari perintah manual operator (MQTT). Tidak pernah otomatis dari sensor.</div>
+        <div class="switch">
+          <label class="toggle"><input type="checkbox" id="sirenEnabled"><span class="slider"></span></label>
+          <span class="lbl">Relay sirine eksternal<small>MCP23017 GPA4 → modul relay</small></span>
+        </div>
+      </div>
+    </div>
+
+    <!-- ============ LANJUTAN ============ -->
+    <div class="card collapsed">
+      <div class="sec-head" onclick="toggleSec(this)">
+        <h3>⚙️ Lanjutan</h3><span class="chev">▾</span>
+      </div>
+      <div class="sec-body">
+        <div class="row2">
+          <div class="field"><label>Interval kirim data (detik)</label><input class="inp" id="intervalSec" placeholder="60"></div>
+          <div class="field"><label>Deteksi node hilang (detik)</label><input class="inp" id="missThresholdSec" placeholder="180"></div>
+        </div>
+        <div class="row2">
+          <div class="field"><label>Ambang tilt SIAGA (derajat)</label><input class="inp" id="tiltSiaga" placeholder="5.0"></div>
+          <div class="field"><label>Ambang tilt AWAS (derajat)</label><input class="inp" id="tiltAwas" placeholder="10.0"></div>
+        </div>
+        <div class="field"><label>Sandi Auto-AP</label><input class="inp" id="apPassword" placeholder="1234567890"></div>
+      </div>
+    </div>
+
+    <!-- ============ ACTIONS ============ -->
+    <div class="actionbar">
+      <button class="btn btn-primary" id="btnApply" onclick="doApply()">💾 Simpan &amp; Jalankan</button>
+    </div>
+    <div style="height:30px"></div>
+  </div>
+
+  <div class="toast" id="toast">
+    <div id="toastTitle"><b>✓ Config tersimpan.</b> Perangkat reboot…</div>
+    <div class="dim" id="toastDesc">Beralih dari AP ke WiFi client. Buka halaman status di IP baru alat.</div>
+  </div>
+
+  <script src="/script.js"></script>
+</body>
+</html>
