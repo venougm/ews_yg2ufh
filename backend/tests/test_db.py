@@ -17,6 +17,86 @@ def test_region_crud(fresh_db):
     assert {k["id"] for k in kecs} == {"depok", "kalasan"}
     assert fresh_db.list_kecamatan("bantul") == []
 
+    # Kelurahan nest under a kecamatan, mirroring kecamatan under kabupaten.
+    fresh_db.add_kelurahan("caturtunggal", "Caturtunggal", "depok")
+    fresh_db.add_kelurahan("maguwoharjo", "Maguwoharjo", "depok")
+    kels = fresh_db.list_kelurahan("depok")
+    assert {k["id"] for k in kels} == {"caturtunggal", "maguwoharjo"}
+    assert all(k["kecamatan_id"] == "depok" for k in kels)
+    # Filtered by kecamatan: a different kecamatan has none.
+    assert fresh_db.list_kelurahan("kalasan") == []
+
+
+def test_node_carries_kelurahan_id(fresh_db):
+    # upsert_node stores kelurahan_id and get_node returns it.
+    fresh_db.upsert_node(
+        node_id="slm-01",
+        nama="Node 1",
+        kabupaten_id="sleman",
+        kecamatan_id="depok",
+        kelurahan_id="caturtunggal",
+    )
+    node = fresh_db.get_node("slm-01")
+    assert node["kelurahan_id"] == "caturtunggal"
+
+    # list_nodes filters by kelurahan.
+    rows = fresh_db.list_nodes(kelurahan="caturtunggal")
+    assert [n["node_id"] for n in rows] == ["slm-01"]
+    assert fresh_db.list_nodes(kelurahan="maguwoharjo") == []
+
+    # update_node writes kelurahan_id unconditionally (can blank it back to NULL).
+    fresh_db.update_node(node_id="slm-01", kelurahan_id=None)
+    assert fresh_db.get_node("slm-01")["kelurahan_id"] is None
+
+
+def test_kelurahan_additive_migration_preserves_data(tmp_path):
+    """A pre-existing ews.db whose `nodes` table lacks `kelurahan_id` must gain
+    the column via ALTER on init_db, with no data loss."""
+    import sqlite3
+
+    import app.db as db
+
+    db_path = str(tmp_path / "old-ews.db")
+    # Simulate an OLD schema: a `nodes` table without the kelurahan_id column,
+    # carrying one pre-existing row.
+    old = sqlite3.connect(db_path)
+    old.executescript(
+        """
+        CREATE TABLE nodes (
+            node_id         TEXT PRIMARY KEY,
+            nama            TEXT,
+            tipe            TEXT,
+            kabupaten_id    TEXT,
+            kecamatan_id    TEXT,
+            lat             REAL,
+            lon             REAL,
+            lokasi          TEXT,
+            created_at      TEXT NOT NULL
+        );
+        """
+    )
+    old.execute(
+        "INSERT INTO nodes (node_id, nama, created_at) VALUES ('legacy-01', 'Legacy', '2024-01-01T00:00:00+00:00')"
+    )
+    old.commit()
+    old.close()
+
+    # Open via init_db -> the additive migration must add kelurahan_id.
+    db.init_db(db_path)
+    try:
+        cols = {row[1] for row in db._conn.execute("PRAGMA table_info(nodes)")}
+        assert "kelurahan_id" in cols
+
+        # The pre-migration row is preserved (never dropped), new column NULL.
+        legacy = db.get_node("legacy-01")
+        assert legacy is not None
+        assert legacy["nama"] == "Legacy"
+        assert legacy["kelurahan_id"] is None
+    finally:
+        # Re-point the module connection at an in-memory DB so later tests that
+        # rely on the default are unaffected by this on-disk file.
+        db.init_db(":memory:")
+
 
 def test_store_latest_and_history(fresh_db):
     payload1 = {"id": "slm-01", "kabupaten": "sleman", "ts": 1, "weather": {"temp": 25.0}}

@@ -54,17 +54,24 @@ CREATE TABLE IF NOT EXISTS kecamatan (
     kabupaten_id    TEXT NOT NULL REFERENCES kabupaten(id)
 );
 
--- kabupaten_id/kecamatan_id are stored WITHOUT a FK constraint, mirroring how
--- readings.kabupaten is a plain text column: a node can be registered (or seen
--- via ingest) carrying a kabupaten/kecamatan whose region row does not exist
--- yet, so the registry must not reject it. The region tables remain the source
--- of truth for the dashboard grouping menus.
+CREATE TABLE IF NOT EXISTS kelurahan (
+    id              TEXT PRIMARY KEY,
+    nama            TEXT NOT NULL,
+    kecamatan_id    TEXT NOT NULL REFERENCES kecamatan(id)
+);
+
+-- kabupaten_id/kecamatan_id/kelurahan_id are stored WITHOUT a FK constraint,
+-- mirroring how readings.kabupaten is a plain text column: a node can be
+-- registered (or seen via ingest) carrying a kabupaten/kecamatan/kelurahan
+-- whose region row does not exist yet, so the registry must not reject it. The
+-- region tables remain the source of truth for the dashboard grouping menus.
 CREATE TABLE IF NOT EXISTS nodes (
     node_id         TEXT PRIMARY KEY,
     nama            TEXT,
     tipe            TEXT,
     kabupaten_id    TEXT,
     kecamatan_id    TEXT,
+    kelurahan_id    TEXT,
     lat             REAL,
     lon             REAL,
     lokasi          TEXT,
@@ -129,6 +136,13 @@ def init_db(db_path: str) -> None:
     conn.execute("PRAGMA journal_mode=WAL")
     conn.execute("PRAGMA foreign_keys=ON")
     conn.executescript(_SCHEMA)
+    # Additive, idempotent migration: a pre-existing ews.db already has a `nodes`
+    # table, so CREATE TABLE IF NOT EXISTS above will not re-run its CREATE and
+    # the new `kelurahan_id` column would be missing. Add it with ALTER only when
+    # absent -- never drop or recreate the table, so existing data is preserved.
+    node_columns = {row[1] for row in conn.execute("PRAGMA table_info(nodes)")}
+    if "kelurahan_id" not in node_columns:
+        conn.execute("ALTER TABLE nodes ADD COLUMN kelurahan_id TEXT")
     conn.execute(
         """
         INSERT INTO thresholds (scope, tilt_siaga, tilt_awas, updated_at)
@@ -219,6 +233,41 @@ def list_kecamatan(kabupaten: str) -> list[dict[str, Any]]:
     return [dict(zip(columns, row)) for row in rows]
 
 
+def add_kelurahan(kel_id: str, nama: str, kecamatan_id: str) -> None:
+    conn = _ensure_initialized()
+    with _db_lock:
+        cur = conn.cursor()
+        try:
+            cur.execute("BEGIN")
+            cur.execute(
+                """
+                INSERT INTO kelurahan (id, nama, kecamatan_id)
+                VALUES (?, ?, ?)
+                ON CONFLICT(id) DO UPDATE SET
+                    nama = excluded.nama,
+                    kecamatan_id = excluded.kecamatan_id
+                """,
+                (kel_id, nama, kecamatan_id),
+            )
+            conn.commit()
+        except Exception:
+            conn.rollback()
+            raise
+
+
+def list_kelurahan(kecamatan: str) -> list[dict[str, Any]]:
+    conn = _ensure_initialized()
+    with _db_lock:
+        cur = conn.cursor()
+        cur.execute(
+            "SELECT id, nama, kecamatan_id FROM kelurahan WHERE kecamatan_id = ? ORDER BY id ASC",
+            (kecamatan,),
+        )
+        rows = cur.fetchall()
+        columns = [d[0] for d in cur.description]
+    return [dict(zip(columns, row)) for row in rows]
+
+
 # ---------------------------------------------------------------------------
 # Node CRUD
 # ---------------------------------------------------------------------------
@@ -229,6 +278,7 @@ def upsert_node(
     tipe: str | None = None,
     kabupaten_id: str | None = None,
     kecamatan_id: str | None = None,
+    kelurahan_id: str | None = None,
     lat: float | None = None,
     lon: float | None = None,
     lokasi: str | None = None,
@@ -245,18 +295,19 @@ def upsert_node(
             cur.execute(
                 """
                 INSERT INTO nodes
-                    (node_id, nama, tipe, kabupaten_id, kecamatan_id, lat, lon, lokasi, created_at)
-                VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
+                    (node_id, nama, tipe, kabupaten_id, kecamatan_id, kelurahan_id, lat, lon, lokasi, created_at)
+                VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
                 ON CONFLICT(node_id) DO UPDATE SET
                     nama = COALESCE(excluded.nama, nodes.nama),
                     tipe = COALESCE(excluded.tipe, nodes.tipe),
                     kabupaten_id = COALESCE(excluded.kabupaten_id, nodes.kabupaten_id),
                     kecamatan_id = COALESCE(excluded.kecamatan_id, nodes.kecamatan_id),
+                    kelurahan_id = COALESCE(excluded.kelurahan_id, nodes.kelurahan_id),
                     lat = COALESCE(excluded.lat, nodes.lat),
                     lon = COALESCE(excluded.lon, nodes.lon),
                     lokasi = COALESCE(excluded.lokasi, nodes.lokasi)
                 """,
-                (node_id, nama, tipe, kabupaten_id, kecamatan_id, lat, lon, lokasi, created_at),
+                (node_id, nama, tipe, kabupaten_id, kecamatan_id, kelurahan_id, lat, lon, lokasi, created_at),
             )
             conn.commit()
         except Exception:
@@ -270,7 +321,7 @@ def get_node(node_id: str) -> dict[str, Any] | None:
         cur = conn.cursor()
         cur.execute(
             """
-            SELECT node_id, nama, tipe, kabupaten_id, kecamatan_id, lat, lon, lokasi, created_at
+            SELECT node_id, nama, tipe, kabupaten_id, kecamatan_id, kelurahan_id, lat, lon, lokasi, created_at
             FROM nodes WHERE node_id = ?
             """,
             (node_id,),
@@ -282,12 +333,17 @@ def get_node(node_id: str) -> dict[str, Any] | None:
     return dict(zip(columns, row))
 
 
-def list_nodes(kabupaten: str | None = None, kecamatan: str | None = None) -> list[dict[str, Any]]:
-    """Node registry filtered optionally by kabupaten/kecamatan. Returns the
-    registered metadata only (latest readings are merged by get_latest_per_node)."""
+def list_nodes(
+    kabupaten: str | None = None,
+    kecamatan: str | None = None,
+    kelurahan: str | None = None,
+) -> list[dict[str, Any]]:
+    """Node registry filtered optionally by kabupaten/kecamatan/kelurahan.
+    Returns the registered metadata only (latest readings are merged by
+    get_latest_per_node)."""
     conn = _ensure_initialized()
     sql = (
-        "SELECT node_id, nama, tipe, kabupaten_id, kecamatan_id, lat, lon, lokasi, created_at "
+        "SELECT node_id, nama, tipe, kabupaten_id, kecamatan_id, kelurahan_id, lat, lon, lokasi, created_at "
         "FROM nodes"
     )
     where = []
@@ -298,6 +354,9 @@ def list_nodes(kabupaten: str | None = None, kecamatan: str | None = None) -> li
     if kecamatan:
         where.append("kecamatan_id = ?")
         params.append(kecamatan)
+    if kelurahan:
+        where.append("kelurahan_id = ?")
+        params.append(kelurahan)
     if where:
         sql += " WHERE " + " AND ".join(where)
     sql += " ORDER BY node_id ASC"
@@ -315,6 +374,7 @@ def update_node(
     tipe: str | None = None,
     kabupaten_id: str | None = None,
     kecamatan_id: str | None = None,
+    kelurahan_id: str | None = None,
     lat: float | None = None,
     lon: float | None = None,
     lokasi: str | None = None,
@@ -336,20 +396,20 @@ def update_node(
                     """
                     UPDATE nodes SET
                         nama = ?, tipe = ?, kabupaten_id = ?, kecamatan_id = ?,
-                        lat = ?, lon = ?, lokasi = ?
+                        kelurahan_id = ?, lat = ?, lon = ?, lokasi = ?
                     WHERE node_id = ?
                     """,
-                    (nama, tipe, kabupaten_id, kecamatan_id, lat, lon, lokasi, node_id),
+                    (nama, tipe, kabupaten_id, kecamatan_id, kelurahan_id, lat, lon, lokasi, node_id),
                 )
             else:
                 created_at = datetime.now(timezone.utc).isoformat()
                 cur.execute(
                     """
                     INSERT INTO nodes
-                        (node_id, nama, tipe, kabupaten_id, kecamatan_id, lat, lon, lokasi, created_at)
-                    VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
+                        (node_id, nama, tipe, kabupaten_id, kecamatan_id, kelurahan_id, lat, lon, lokasi, created_at)
+                    VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
                     """,
-                    (node_id, nama, tipe, kabupaten_id, kecamatan_id, lat, lon, lokasi, created_at),
+                    (node_id, nama, tipe, kabupaten_id, kecamatan_id, kelurahan_id, lat, lon, lokasi, created_at),
                 )
             conn.commit()
         except Exception:
@@ -414,6 +474,28 @@ def count_nodes_in_kecamatan(kecamatan_id: str) -> int:
     return int(row[0]) if row else 0
 
 
+def count_kelurahan_in_kecamatan(kecamatan_id: str) -> int:
+    conn = _ensure_initialized()
+    with _db_lock:
+        cur = conn.cursor()
+        cur.execute(
+            "SELECT COUNT(*) FROM kelurahan WHERE kecamatan_id = ?", (kecamatan_id,)
+        )
+        row = cur.fetchone()
+    return int(row[0]) if row else 0
+
+
+def count_nodes_in_kelurahan(kelurahan_id: str) -> int:
+    conn = _ensure_initialized()
+    with _db_lock:
+        cur = conn.cursor()
+        cur.execute(
+            "SELECT COUNT(*) FROM nodes WHERE kelurahan_id = ?", (kelurahan_id,)
+        )
+        row = cur.fetchone()
+    return int(row[0]) if row else 0
+
+
 def delete_kabupaten(kab_id: str) -> int:
     """Delete a kabupaten row. Returns rows removed (0 if not found). Reference
     guarding is the router's job (refuse while kecamatan/nodes still point here)."""
@@ -433,13 +515,30 @@ def delete_kabupaten(kab_id: str) -> int:
 
 def delete_kecamatan(kec_id: str) -> int:
     """Delete a kecamatan row. Returns rows removed (0 if not found). Reference
-    guarding (nodes still pointing here) is the router's job."""
+    guarding (kelurahan/nodes still pointing here) is the router's job."""
     conn = _ensure_initialized()
     with _db_lock:
         cur = conn.cursor()
         try:
             cur.execute("BEGIN")
             cur.execute("DELETE FROM kecamatan WHERE id = ?", (kec_id,))
+            removed = cur.rowcount
+            conn.commit()
+        except Exception:
+            conn.rollback()
+            raise
+    return removed
+
+
+def delete_kelurahan(kel_id: str) -> int:
+    """Delete a kelurahan row. Returns rows removed (0 if not found). Reference
+    guarding (nodes still pointing here) is the router's job."""
+    conn = _ensure_initialized()
+    with _db_lock:
+        cur = conn.cursor()
+        try:
+            cur.execute("BEGIN")
+            cur.execute("DELETE FROM kelurahan WHERE id = ?", (kel_id,))
             removed = cur.rowcount
             conn.commit()
         except Exception:

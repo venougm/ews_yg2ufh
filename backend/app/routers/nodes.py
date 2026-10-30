@@ -59,6 +59,7 @@ def _node_out(node_id: str, registry: dict | None, latest: dict | None) -> NodeO
         tipe=(registry or {}).get("tipe"),
         kabupaten=kabupaten,
         kecamatan=(registry or {}).get("kecamatan_id"),
+        kelurahan=(registry or {}).get("kelurahan_id"),
         lat=lat if lat is not None else (registry or {}).get("lat"),
         lon=lon if lon is not None else (registry or {}).get("lon"),
         status=status,
@@ -73,11 +74,15 @@ def _node_out(node_id: str, registry: dict | None, latest: dict | None) -> NodeO
 def get_nodes_route(
     kabupaten: str | None = Query(default=None),
     kecamatan: str | None = Query(default=None),
+    kelurahan: str | None = Query(default=None),
 ):
-    """Nodes with their latest reading, filtered optionally by kabupaten and
-    kecamatan. Includes both registered nodes and nodes seen only via ingest."""
+    """Nodes with their latest reading, filtered optionally by kabupaten,
+    kecamatan and kelurahan. Includes both registered nodes and nodes seen only
+    via ingest."""
     try:
-        registered = {n["node_id"]: n for n in db.list_nodes(kabupaten, kecamatan)}
+        registered = {
+            n["node_id"]: n for n in db.list_nodes(kabupaten, kecamatan, kelurahan)
+        }
         latest = _latest_map()
     except Exception as e:
         logger.error("GET /api/nodes failed: %s", e, exc_info=True)
@@ -91,10 +96,10 @@ def get_nodes_route(
         seen.add(node_id)
 
     # Nodes that only exist via ingest (never manually registered). Apply the
-    # kabupaten filter using the reading's stored kabupaten; a kecamatan filter
-    # cannot match an unregistered node (kecamatan is registry metadata), so
-    # unregistered nodes are omitted when a kecamatan filter is set.
-    if not kecamatan:
+    # kabupaten filter using the reading's stored kabupaten; a kecamatan/kelurahan
+    # filter cannot match an unregistered node (both are registry metadata), so
+    # unregistered nodes are omitted when a kecamatan or kelurahan filter is set.
+    if not kecamatan and not kelurahan:
         for node_id, row in latest.items():
             if node_id in seen:
                 continue
@@ -127,6 +132,7 @@ def post_node_route(body: NodeIn):
             tipe=body.tipe,
             kabupaten_id=body.kabupaten,
             kecamatan_id=body.kecamatan,
+            kelurahan_id=body.kelurahan,
             lat=body.lat,
             lon=body.lon,
             lokasi=body.lokasi,
@@ -155,6 +161,7 @@ def put_node_route(node_id: str, body: NodeUpdateIn):
             tipe=body.tipe,
             kabupaten_id=body.kabupaten,
             kecamatan_id=body.kecamatan,
+            kelurahan_id=body.kelurahan,
             lat=body.lat,
             lon=body.lon,
             lokasi=body.lokasi,

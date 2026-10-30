@@ -300,3 +300,105 @@ def test_region_delete_rbac(client):
     assert client.delete("/api/kabupaten/sleman").status_code == 401
     assert _login(client, "monitor", "monitor").status_code == 200
     assert client.delete("/api/kabupaten/sleman").status_code == 403
+
+
+# ---------------------------------------------------------------------------
+# Kelurahan -- region CRUD, node round-trip, delete guards
+# ---------------------------------------------------------------------------
+
+def _seed_region(client):
+    assert _login(client, "admin", "test-admin-pw").status_code == 200
+    assert client.post(
+        "/api/kabupaten", json={"id": "sleman", "nama": "Sleman", "provinsi": "diy"}
+    ).status_code == 201
+    assert client.post(
+        "/api/kabupaten/sleman/kecamatan",
+        json={"id": "depok", "nama": "Depok", "kabupaten_id": "sleman"},
+    ).status_code == 201
+
+
+def test_post_and_get_kelurahan(client):
+    _seed_region(client)
+
+    # POST a kelurahan under the kecamatan; the response reflects the path kec.
+    r = client.post(
+        "/api/kabupaten/sleman/kecamatan/depok/kelurahan",
+        json={"id": "caturtunggal", "nama": "Caturtunggal", "kecamatan_id": "ignored"},
+    )
+    assert r.status_code == 201
+    assert r.json() == {
+        "id": "caturtunggal",
+        "nama": "Caturtunggal",
+        "kecamatan_id": "depok",
+    }
+
+    # GET lists it back.
+    r = client.get("/api/kabupaten/sleman/kecamatan/depok/kelurahan")
+    assert r.status_code == 200
+    kels = {k["id"]: k for k in r.json()}
+    assert "caturtunggal" in kels
+    assert kels["caturtunggal"]["kecamatan_id"] == "depok"
+
+
+def test_node_roundtrips_kelurahan(client):
+    _seed_region(client)
+    assert client.post(
+        "/api/kabupaten/sleman/kecamatan/depok/kelurahan",
+        json={"id": "caturtunggal", "nama": "Caturtunggal", "kecamatan_id": "depok"},
+    ).status_code == 201
+
+    # Register a node carrying a kelurahan.
+    assert _register_node(client, kelurahan="caturtunggal").status_code == 201
+
+    # GET /api/nodes/{id} reflects it.
+    r = client.get("/api/nodes/slm-01")
+    assert r.status_code == 200
+    assert r.json()["kelurahan"] == "caturtunggal"
+
+    # GET /api/nodes?kelurahan=... filters to it.
+    r = client.get("/api/nodes?kelurahan=caturtunggal")
+    assert r.status_code == 200
+    assert [n["node_id"] for n in r.json()] == ["slm-01"]
+
+    # A non-matching kelurahan filter returns none.
+    r = client.get("/api/nodes?kelurahan=maguwoharjo")
+    assert r.status_code == 200
+    assert r.json() == []
+
+
+def test_delete_kecamatan_guard_when_kelurahan_present(client):
+    _seed_region(client)
+    assert client.post(
+        "/api/kabupaten/sleman/kecamatan/depok/kelurahan",
+        json={"id": "caturtunggal", "nama": "Caturtunggal", "kecamatan_id": "depok"},
+    ).status_code == 201
+
+    # A kelurahan still references the kecamatan -> 409 (new guard).
+    assert client.delete("/api/kabupaten/sleman/kecamatan/depok").status_code == 409
+
+    # Remove the kelurahan, then the kecamatan can go.
+    assert client.delete(
+        "/api/kabupaten/sleman/kecamatan/depok/kelurahan/caturtunggal"
+    ).status_code == 200
+    assert client.delete("/api/kabupaten/sleman/kecamatan/depok").status_code == 200
+
+
+def test_delete_kelurahan_guard_when_node_present(client):
+    _seed_region(client)
+    assert client.post(
+        "/api/kabupaten/sleman/kecamatan/depok/kelurahan",
+        json={"id": "caturtunggal", "nama": "Caturtunggal", "kecamatan_id": "depok"},
+    ).status_code == 201
+    assert _register_node(client, kelurahan="caturtunggal").status_code == 201
+
+    # A node still references the kelurahan -> 409.
+    assert client.delete(
+        "/api/kabupaten/sleman/kecamatan/depok/kelurahan/caturtunggal"
+    ).status_code == 409
+
+
+def test_delete_kelurahan_unknown_404(client):
+    _seed_region(client)
+    assert client.delete(
+        "/api/kabupaten/sleman/kecamatan/depok/kelurahan/ghost"
+    ).status_code == 404

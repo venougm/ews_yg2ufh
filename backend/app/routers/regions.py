@@ -1,4 +1,4 @@
-"""REST endpoints for the region hierarchy: kabupaten & kecamatan.
+"""REST endpoints for the region hierarchy: kabupaten, kecamatan & kelurahan.
 
 All handlers are plain `def` (not `async def`): db.py's sqlite3 calls block, so
 FastAPI dispatches each through its own threadpool, keeping the event loop free
@@ -13,7 +13,7 @@ from fastapi import APIRouter, Depends, HTTPException
 
 from app import db
 from app.deps import require_admin
-from app.schemas import KabupatenOut, KecamatanOut
+from app.schemas import KabupatenOut, KecamatanOut, KelurahanOut
 
 logger = logging.getLogger(__name__)
 
@@ -63,6 +63,36 @@ def post_kecamatan_route(kab: str, body: KecamatanOut):
     return KecamatanOut(id=body.id, nama=body.nama, kabupaten_id=kab)
 
 
+@router.get("/kabupaten/{kab}/kecamatan/{kec}/kelurahan",
+            response_model=list[KelurahanOut])
+def get_kelurahan_route(kab: str, kec: str):
+    try:
+        rows = db.list_kelurahan(kec)
+    except Exception as e:
+        logger.error(
+            "GET /api/kabupaten/%s/kecamatan/%s/kelurahan failed: %s",
+            kab, kec, e, exc_info=True,
+        )
+        raise HTTPException(status_code=500, detail="internal error")
+    return [KelurahanOut(**row) for row in rows]
+
+
+@router.post("/kabupaten/{kab}/kecamatan/{kec}/kelurahan",
+             response_model=KelurahanOut, status_code=201,
+             dependencies=[Depends(require_admin)])
+def post_kelurahan_route(kab: str, kec: str, body: KelurahanOut):
+    try:
+        db.add_kelurahan(body.id, body.nama, kec)
+    except Exception as e:
+        logger.error(
+            "POST /api/kabupaten/%s/kecamatan/%s/kelurahan failed: %s",
+            kab, kec, e, exc_info=True,
+        )
+        raise HTTPException(status_code=500, detail="internal error")
+    # Reflect the path kecamatan in the response regardless of the body value.
+    return KelurahanOut(id=body.id, nama=body.nama, kecamatan_id=kec)
+
+
 @router.delete("/kabupaten/{kab_id}", dependencies=[Depends(require_admin)])
 def delete_kabupaten_route(kab_id: str):
     """Delete a kabupaten (admin only). Refuses with 409 while any kecamatan or
@@ -91,10 +121,11 @@ def delete_kabupaten_route(kab_id: str):
 @router.delete("/kabupaten/{kab}/kecamatan/{kec_id}",
                dependencies=[Depends(require_admin)])
 def delete_kecamatan_route(kab: str, kec_id: str):
-    """Delete a kecamatan (admin only). Refuses with 409 while any node still
-    references it. `kab` is part of the path for URL symmetry; deletion keys on
-    kec_id (globally unique)."""
+    """Delete a kecamatan (admin only). Refuses with 409 while any kelurahan or
+    node still references it. `kab` is part of the path for URL symmetry;
+    deletion keys on kec_id (globally unique)."""
     try:
+        kel_count = db.count_kelurahan_in_kecamatan(kec_id)
         node_count = db.count_nodes_in_kecamatan(kec_id)
     except Exception as e:
         logger.error(
@@ -102,8 +133,10 @@ def delete_kecamatan_route(kab: str, kec_id: str):
             kab, kec_id, e, exc_info=True,
         )
         raise HTTPException(status_code=500, detail="internal error")
-    if node_count > 0:
-        raise HTTPException(status_code=409, detail="kecamatan masih dipakai node")
+    if kel_count > 0 or node_count > 0:
+        raise HTTPException(
+            status_code=409, detail="kecamatan masih dipakai kelurahan/node"
+        )
     try:
         removed = db.delete_kecamatan(kec_id)
     except Exception as e:
@@ -114,4 +147,33 @@ def delete_kecamatan_route(kab: str, kec_id: str):
         raise HTTPException(status_code=500, detail="internal error")
     if removed == 0:
         raise HTTPException(status_code=404, detail="kecamatan tidak ditemukan")
+    return {"ok": True}
+
+
+@router.delete("/kabupaten/{kab}/kecamatan/{kec}/kelurahan/{kel_id}",
+               dependencies=[Depends(require_admin)])
+def delete_kelurahan_route(kab: str, kec: str, kel_id: str):
+    """Delete a kelurahan (admin only). Refuses with 409 while any node still
+    references it. `kab`/`kec` are part of the path for URL symmetry; deletion
+    keys on kel_id (globally unique)."""
+    try:
+        node_count = db.count_nodes_in_kelurahan(kel_id)
+    except Exception as e:
+        logger.error(
+            "DELETE /api/kabupaten/%s/kecamatan/%s/kelurahan/%s guard failed: %s",
+            kab, kec, kel_id, e, exc_info=True,
+        )
+        raise HTTPException(status_code=500, detail="internal error")
+    if node_count > 0:
+        raise HTTPException(status_code=409, detail="kelurahan masih dipakai node")
+    try:
+        removed = db.delete_kelurahan(kel_id)
+    except Exception as e:
+        logger.error(
+            "DELETE /api/kabupaten/%s/kecamatan/%s/kelurahan/%s failed: %s",
+            kab, kec, kel_id, e, exc_info=True,
+        )
+        raise HTTPException(status_code=500, detail="internal error")
+    if removed == 0:
+        raise HTTPException(status_code=404, detail="kelurahan tidak ditemukan")
     return {"ok": True}

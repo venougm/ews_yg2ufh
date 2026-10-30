@@ -24,12 +24,19 @@ class KecamatanOut(BaseModel):
     kabupaten_id: str
 
 
+class KelurahanOut(BaseModel):
+    id: str
+    nama: str
+    kecamatan_id: str
+
+
 class NodeOut(BaseModel):
     node_id: str
     nama: str | None = None
     tipe: str | None = None
     kabupaten: str | None = None
     kecamatan: str | None = None
+    kelurahan: str | None = None
     lat: float | None = None
     lon: float | None = None
     status: str | None = None
@@ -50,6 +57,7 @@ class NodeIn(BaseModel):
     tipe: str | None = None
     kabupaten: str | None = None
     kecamatan: str | None = None
+    kelurahan: str | None = None
     lat: float | None = None
     lon: float | None = None
     lokasi: str | None = None
@@ -86,6 +94,7 @@ class NodeUpdateIn(BaseModel):
     tipe: str | None = None
     kabupaten: str | None = None
     kecamatan: str | None = None
+    kelurahan: str | None = None
     lat: float | None = None
     lon: float | None = None
     lokasi: str | None = None
