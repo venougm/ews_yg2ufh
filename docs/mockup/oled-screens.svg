@@ -1,0 +1,165 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="920" height="760" viewBox="0 0 920 760" font-family="Consolas, 'Courier New', monospace">
+  <style>
+    .bg{fill:#0a0a0f}
+    .panel{fill:#12131a;stroke:#2c333b;stroke-width:1;rx:8}
+    .oled{fill:#000}
+    .oledborder{fill:none;stroke:#1b3a4b;stroke-width:2;rx:6}
+    .px{fill:#39d0ff}            /* OLED cyan-ish pixels (khas SSD1306 biru) */
+    .pxdim{fill:#1d7fa0}
+    .title{fill:#e6edf3;font-size:15px;font-weight:bold;font-family:Inter,sans-serif}
+    .sub{fill:#8b949e;font-size:11px;font-family:Inter,sans-serif}
+    .tag{font-size:10px;font-weight:bold;font-family:Inter,sans-serif}
+    .note{fill:#6b7682;font-size:10.5px;font-family:Inter,sans-serif}
+    .big{font-size:13px}
+    .lg{font-size:12px}
+    .sm{font-size:10.5px}
+  </style>
+
+  <rect class="bg" width="920" height="760"/>
+  <text x="30" y="34" class="title" font-size="19">Tampilan OLED SSD1306 (128×64) — EWS T-Beam</text>
+  <text x="30" y="54" class="sub">Layar biru monokrom. Auto-rotate antar halaman tiap ~4 dtk. Tahan tombol USER (IO38) 3 dtk → masuk mode SETUP (AP).</text>
+
+  <!-- ============ 1. BOOT ============ -->
+  <g transform="translate(30,80)">
+    <rect class="panel" width="400" height="150" rx="8"/>
+    <text x="16" y="26" class="title">1 · Boot / Splash</text>
+    <text x="16" y="44" class="sub">saat perangkat baru nyala</text>
+    <!-- oled -->
+    <g transform="translate(90,58)">
+      <rect class="oledborder" width="256" height="128" rx="6" transform="scale(0.8)"/>
+      <g transform="scale(0.8)" class="px" font-size="20">
+        <text x="40" y="38">EWS T-Beam</text>
+        <text x="40" y="66" class="pxdim" font-size="16">YG2UFH</text>
+        <text x="40" y="96" font-size="15" class="pxdim">booting...</text>
+      </g>
+    </g>
+  </g>
+
+  <!-- ============ 2. MODE AP (setup) ============ -->
+  <g transform="translate(470,80)">
+    <rect class="panel" width="420" height="150" rx="8"/>
+    <text x="16" y="26" class="title">2 · Mode AP <tspan class="tag" fill="#d29922">[SETUP]</tspan></text>
+    <text x="16" y="44" class="sub">pertama flash / setelah tahan IO38 3 dtk</text>
+    <g transform="translate(96,56)">
+      <rect class="oledborder" width="256" height="128" rx="6" transform="scale(0.82)"/>
+      <g transform="scale(0.82)" class="px" font-size="17">
+        <text x="12" y="26">== MODE SETUP ==</text>
+        <line x1="12" y1="34" x2="244" y2="34" stroke="#1d7fa0" stroke-width="1"/>
+        <text x="12" y="58" font-size="15">WiFi:EWS-slm-01</text>
+        <text x="12" y="80" font-size="15">Pass:1234567890</text>
+        <text x="12" y="104" class="px" font-size="15">192.168.4.1</text>
+      </g>
+    </g>
+  </g>
+
+  <!-- ============ 3. GATEWAY ============ -->
+  <g transform="translate(30,250)">
+    <rect class="panel" width="400" height="230" rx="8"/>
+    <text x="16" y="26" class="title">3 · GATEWAY <tspan class="tag" fill="#e23b3b">[GW]</tspan></text>
+    <text x="16" y="44" class="sub">punya WiFi internet + MQTT; terima LoRa dari node</text>
+    <!-- page A -->
+    <g transform="translate(20,58)">
+      <rect class="oledborder" width="256" height="128" rx="6" transform="scale(0.68)"/>
+      <g transform="scale(0.68)" class="px" font-size="16">
+        <text x="10" y="24">slm-gw-01   [GW]</text>
+        <circle cx="244" cy="19" r="6" fill="#39d0ff"/>
+        <line x1="10" y1="32" x2="248" y2="32" stroke="#1d7fa0" stroke-width="1"/>
+        <text x="10" y="54">WiFi -58  MQTT:OK</text>
+        <text x="10" y="76">IP 192.168.1.42</text>
+        <text x="10" y="98">Nodes:2 Rx58 Tx3</text>
+        <text x="10" y="120">Last slm-01  12s</text>
+      </g>
+      <text x="2" y="104" class="note">halaman A — jaringan &amp; node</text>
+    </g>
+    <!-- page B -->
+    <g transform="translate(205,58)">
+      <rect class="oledborder" width="256" height="128" rx="6" transform="scale(0.68)"/>
+      <g transform="scale(0.68)" class="px" font-size="16">
+        <text x="10" y="24">slm-gw-01   [GW]</text>
+        <circle cx="244" cy="19" r="6" fill="#39d0ff"/>
+        <line x1="10" y1="32" x2="248" y2="32" stroke="#1d7fa0" stroke-width="1"/>
+        <text x="10" y="54">T27.4 H82% 1008</text>
+        <text x="10" y="76">Bat12.8 PV18.2 87</text>
+        <text x="10" y="98">Siren: OFF</text>
+        <text x="10" y="120">Up 3h20m fw0.1.0</text>
+      </g>
+      <text x="2" y="104" class="note">halaman B — sensor &amp; sirine</text>
+    </g>
+  </g>
+
+  <!-- ============ 4. NODE ============ -->
+  <g transform="translate(470,250)">
+    <rect class="panel" width="420" height="230" rx="8"/>
+    <text x="16" y="26" class="title">4 · NODE <tspan class="tag" fill="#2f81f7">[NODE]</tspan></text>
+    <text x="16" y="44" class="sub">kirim via LoRa → gateway (atau WiFi bila ada)</text>
+    <!-- page A -->
+    <g transform="translate(24,58)">
+      <rect class="oledborder" width="256" height="128" rx="6" transform="scale(0.68)"/>
+      <g transform="scale(0.68)" class="px" font-size="16">
+        <text x="10" y="24">slm-01    [NODE]</text>
+        <circle cx="244" cy="19" r="6" fill="#39d0ff"/>
+        <line x1="10" y1="32" x2="248" y2="32" stroke="#1d7fa0" stroke-width="1"/>
+        <text x="10" y="54">T27.4 H82% 1008</text>
+        <text x="10" y="76">Bat12.8 PV18.2 87</text>
+        <text x="10" y="98">GPS:fix  8 sat</text>
+        <text x="10" y="120" fill="#39d0ff">LoRa&gt;GW #1234 15s</text>
+      </g>
+      <text x="2" y="104" class="note">jalur kirim = LoRa</text>
+    </g>
+    <!-- page B (node kebetulan dapat WiFi) -->
+    <g transform="translate(212,58)">
+      <rect class="oledborder" width="256" height="128" rx="6" transform="scale(0.68)"/>
+      <g transform="scale(0.68)" class="px" font-size="16">
+        <text x="10" y="24">slm-01    [NODE]</text>
+        <circle cx="244" cy="19" r="6" fill="#39d0ff"/>
+        <line x1="10" y1="32" x2="248" y2="32" stroke="#1d7fa0" stroke-width="1"/>
+        <text x="10" y="54">T27.4 H82% 1008</text>
+        <text x="10" y="76">GPS:fix  8 sat</text>
+        <text x="10" y="98" class="pxdim">IP 192.168.1.55</text>
+        <text x="10" y="120" fill="#39d0ff">WiFi&gt;MQTT #1234</text>
+      </g>
+      <text x="2" y="104" class="note">failover: node dpт WiFi</text>
+    </g>
+  </g>
+
+  <!-- ============ 5. ALARM ============ -->
+  <g transform="translate(30,500)">
+    <rect class="panel" width="400" height="170" rx="8"/>
+    <text x="16" y="26" class="title">5 · Alarm / Notifikasi</text>
+    <text x="16" y="44" class="sub">saat node kirim SIAGA/AWAS (tetap NOTIF, sirine manual)</text>
+    <g transform="translate(90,56)">
+      <rect class="oledborder" width="256" height="128" rx="6" transform="scale(0.78)"/>
+      <rect x="0" y="0" width="256" height="128" rx="6" transform="scale(0.78)" fill="#1a0808" opacity="0.5"/>
+      <g transform="scale(0.78)" font-size="17">
+        <text x="30" y="30" fill="#ff6b6b" font-size="19" font-weight="bold">!! AWAS !!</text>
+        <line x1="12" y1="40" x2="244" y2="40" stroke="#ff6b6b" stroke-width="1"/>
+        <text x="12" y="64" class="px">slm-01 tilt</text>
+        <text x="12" y="86" class="px">delta +5.2 deg</text>
+        <text x="12" y="110" class="pxdim" font-size="14">10:39  verifikasi!</text>
+      </g>
+    </g>
+  </g>
+
+  <!-- ============ 6. MASUK SETUP (hold IO38) ============ -->
+  <g transform="translate(470,500)">
+    <rect class="panel" width="420" height="170" rx="8"/>
+    <text x="16" y="26" class="title">6 · Transisi → Setup</text>
+    <text x="16" y="44" class="sub">feedback saat tombol USER (IO38) ditahan</text>
+    <g transform="translate(96,56)">
+      <rect class="oledborder" width="256" height="128" rx="6" transform="scale(0.8)"/>
+      <g transform="scale(0.8)" class="px" font-size="16">
+        <text x="14" y="30" font-size="15">Tahan utk SETUP..</text>
+        <!-- progress bar -->
+        <rect x="14" y="48" width="228" height="20" fill="none" stroke="#39d0ff" stroke-width="2"/>
+        <rect x="18" y="52" width="150" height="12" fill="#39d0ff"/>
+        <text x="14" y="94" font-size="14" class="pxdim">lepas = batal</text>
+        <text x="14" y="116" font-size="14" class="pxdim">3 dtk → mode AP</text>
+      </g>
+    </g>
+  </g>
+
+  <!-- footer -->
+  <text x="30" y="710" class="sub">Indikator: ● kanan-atas = status online/aktif · [GW]/[NODE] = peran · baris bawah = jalur kirim (LoRa&gt;GW / WiFi&gt;MQTT).</text>
+  <text x="30" y="730" class="sub">Timeout layar mengikuti config display.timeout; kalau mati, tekan tombol untuk nyalakan lagi. Gateway andalkan WiFi; node andalkan LoRa.</text>
+  <text x="30" y="750" class="sub">Mode AP: sementara — timeout ~5 menit tanpa aktivitas → balik client otomatis (bisa diubah di config).</text>
+</svg>

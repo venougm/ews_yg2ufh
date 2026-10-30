@@ -3,6 +3,9 @@
 Firmware untuk sistem peringatan dini (Early Warning System) berbasis LilyGO
 **T-Beam v1.2** (ESP32 + LoRa SX1276 @ **915 MHz** + GPS NEO-6M + PMIC AXP2101).
 
+> 📘 **Panduan pemakaian (operator):** [../docs/PANDUAN-PERANGKAT.md](../docs/PANDUAN-PERANGKAT.md)
+> — tutorial flash, setup pertama, cara baca OLED (dengan gambar), tombol IO38, troubleshooting.
+
 Arsitektur meniru iGate LoRa APRS **CA2RXU**, diadaptasi untuk EWS: **satu
 firmware, dua peran** yang dipilih lewat web config — **NODE** (seperti tracker)
 dan **GATEWAY** (seperti iGate). MQTT memakai **JSON native** (tanpa aprslib).

@@ -4,7 +4,12 @@ Early Warning System (EWS) berbasis jaringan sensor LoRa untuk pemantauan
 pergerakan tanah / longsor + cuaca + solar, dengan data dikirim ke MQTT server
 pribadi `ews.example.com`.
 
-Status: **PERENCANAAN** (belum masuk tahap coding firmware).
+Status: **IMPLEMENTASI** — firmware, backend, dan web flasher sudah jadi.
+
+👉 **Panduan pemakaian perangkat (operator):** [docs/PANDUAN-PERANGKAT.md](docs/PANDUAN-PERANGKAT.md)
+— flashing, setup pertama, cara baca OLED, tombol IO38, troubleshooting.
+
+👉 **Web flasher (flash via browser):** https://venougm.github.io/ews_yg2ufh/webflasher/
 
 ## Ringkasan sistem
 
@@ -29,15 +34,20 @@ otomatis, demi menghindari alarm palsu).
 
 Wilayah: **Yogyakarta, Kabupaten Sleman**.
 
-## Dokumen perencanaan
+## Dokumentasi
 
-- [docs/architecture.md](docs/architecture.md) — arsitektur & keputusan desain.
-- [docs/decisions.md](docs/decisions.md) — catatan keputusan (open questions & yang sudah fix).
-- [docs/bom.md](docs/bom.md) — kebutuhan alat & bahan (sudah dimiliki vs perlu dibeli).
+- [docs/PANDUAN-PERANGKAT.md](docs/PANDUAN-PERANGKAT.md) — **panduan operator**: flash, setup, OLED, troubleshooting.
+- [firmware/README.md](firmware/README.md) — detail teknis firmware (build, MQTT, paket LoRa, pin map).
+- [backend/README.md](backend/README.md) — backend FastAPI (REST, WebSocket, MQTT ingest, auth).
 - [docs/technical-design.md](docs/technical-design.md) — cetak biru teknis: JSON, topic MQTT, protokol LoRa, library.
+- [docs/architecture.md](docs/architecture.md) — arsitektur & keputusan desain.
+- [docs/decisions.md](docs/decisions.md) — catatan keputusan.
+- [docs/bom.md](docs/bom.md) — kebutuhan alat & bahan.
+- [docs/firmware-decisions-ca2rxu-model.md](docs/firmware-decisions-ca2rxu-model.md) — keputusan firmware (model CA2RXU, web flasher, dropdown wilayah).
 
-## Komponen project (rencana)
+## Komponen project
 
 - `firmware/` — firmware EWS (PlatformIO), satu kode untuk Node & Gateway.
-- `web-flasher/` — web flasher ber-branding YG2UFH (ESP Web Tools), host di `ews.example.com`.
-- `docs/` — dokumentasi perencanaan & desain.
+- `backend/` — backend dashboard FastAPI (port 8001, MQTT ingest, SQLite).
+- `webflasher/` — web flasher ber-branding YG2UFH (ESP Web Tools), host di GitHub Pages.
+- `docs/` — dokumentasi + mockup (web config, status, OLED).
