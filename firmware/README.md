@@ -64,14 +64,19 @@ Setelah `pio run` menghasilkan artefak di `.pio/build/ttgo-t-beam-ews/`
 dengan `esptool`:
 
 ```sh
-# esptool ikut terpasang bersama PlatformIO
-python -m esptool --chip esp32 merge_bin -o firmware-merged.bin \
+# esptool ikut terpasang bersama PlatformIO (paket tool-esptoolpy).
+# BUKAN modul python global -> panggil skripnya langsung:
+python ~/.platformio/packages/tool-esptoolpy/esptool.py \
+  --chip esp32 merge_bin -o firmware-merged.bin \
   --flash_mode dio --flash_freq 40m --flash_size 4MB \
   0x1000  .pio/build/ttgo-t-beam-ews/bootloader.bin \
   0x8000  .pio/build/ttgo-t-beam-ews/partitions.bin \
   0xe000  ~/.platformio/packages/framework-arduinoespressif32/tools/partitions/boot_app0.bin \
   0x10000 .pio/build/ttgo-t-beam-ews/firmware.bin
 ```
+
+> Cara termudah: pakai `webflasher/build-merged-bin.ps1` yang sudah menangani
+> pencarian path esptool + boot_app0 + penggabungan SPIFFS otomatis.
 
 > Catatan: aset SPIFFS (`data/`) tidak termasuk di `firmware-merged.bin` di atas.
 > Untuk flasher yang juga menanam web UI, tambahkan image SPIFFS pada offset

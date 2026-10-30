@@ -43,3 +43,8 @@ Thumbs.db
 
 # Artefak internal workflow (berisi catatan kerja; jangan di-commit ke repo publik)
 .agents/
+.worktrees/
+
+# ---- Web flasher: binary besar, di-build on-demand (webflasher/build-merged-bin.ps1) ----
+webflasher/firmware-merged.bin
+webflasher/spiffs.bin

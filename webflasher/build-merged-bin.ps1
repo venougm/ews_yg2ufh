@@ -42,11 +42,18 @@ $BootApp0 = Get-ChildItem -Recurse -ErrorAction SilentlyContinue `
   Select-Object -First 1 -ExpandProperty FullName
 if (-not $BootApp0) { throw "boot_app0.bin tidak ditemukan. Jalankan 'pio run' dulu agar framework ter-download." }
 
+# --- cari esptool.py (ikut terpasang di paket PlatformIO 'tool-esptoolpy') ---
+# esptool BUKAN modul python global; panggil skripnya langsung.
+$Esptool = Get-ChildItem -Recurse -ErrorAction SilentlyContinue `
+  "$env:USERPROFILE\.platformio\packages\tool-esptoolpy\esptool.py" |
+  Select-Object -First 1 -ExpandProperty FullName
+if (-not $Esptool) { throw "esptool.py tidak ditemukan di .platformio\packages\tool-esptoolpy. Jalankan 'pio run' dulu." }
+
 # --- offset SPIFFS dari partitions_ews.csv (spiffs = 0x3D0000) ---
 $SpiffsOffset = "0x3D0000"
 
 Write-Host "==> Merge jadi satu image: $OutBin"
-python -m esptool --chip esp32 merge_bin -o $OutBin `
+python "$Esptool" --chip esp32 merge_bin -o $OutBin `
   --flash_mode dio --flash_freq 40m --flash_size 4MB `
   0x1000   "$BuildDir\bootloader.bin" `
   0x8000   "$BuildDir\partitions.bin" `
