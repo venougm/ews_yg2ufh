@@ -7,8 +7,10 @@
 #include "wifi_manager.h"
 #include "lora.h"
 #include "mqtt.h"
+#include "node.h"
+#include "gateway.h"
 
-// EWS T-Beam firmware — boot foundation (FEAT-001).
+// EWS T-Beam firmware — boot foundation (FEAT-001) + role dispatch (FEAT-003).
 // Boot order per plan: Serial -> I2C -> AXP2101 power rails (LoRa+GPS) -> config
 // -> display -> WiFi (STA or auto-AP). Role dispatch and transport are added by
 // later FEATs. The MCP23017 role jumper (GPB2) is NEVER read for role logic;
@@ -75,24 +77,40 @@ void setup() {
         DisplayUtils::showStatus("WiFi offline");
     }
 
-    // Transport bring-up (FEAT-002): init the radio always; MQTT only matters in
-    // STA mode. Role behavior that uses these lands in a later FEAT.
-    if (!WiFiManager::isApMode()) {
-        LoRa_Utils::setup();
-        MQTT_Utils::setup();
+    // Role dispatch (FEAT-003). In AP mode we stay in setup/config only (the
+    // web config UI lands in FEAT-004); otherwise bring up transport and run the
+    // role selected by Config.identity.role. The MCP23017 role jumper is NEVER
+    // consulted — role comes only from config.
+    if (WiFiManager::isApMode()) {
+        // TODO(feat-004): start the AP-mode web configuration server here.
+        Serial.println("AP mode: web config placeholder (FEAT-004)");
+        return;
+    }
+
+    // STA mode: init the radio always. Configure the MQTT client now (cheap,
+    // no connection yet); the actual connect happens in the role loop only once
+    // WiFi is up (MQTT_Utils::connect() bails out while offline).
+    LoRa_Utils::setup();
+    MQTT_Utils::setup();
+
+    if (Config.identity.role == 1) {
+        Serial.println("Role: GATEWAY");
+        Gateway::setup();
+    } else {
+        Serial.println("Role: NODE");
+        Node::setup();
     }
 }
 
 void loop() {
     WiFiManager::checkWiFi();
 
-    // Heartbeat until role dispatch / transport arrive in later FEATs.
-    static unsigned long lastBeat = 0;
-    if (millis() - lastBeat >= 10000) {
-        lastBeat = millis();
-        Serial.printf("heartbeat uptime=%lus wifi=%d ap=%d\n",
-                      (unsigned long)(millis() / 1000),
-                      WiFiManager::isConnected() ? 1 : 0,
-                      WiFiManager::isApMode() ? 1 : 0);
+    // In AP mode there is no role loop yet (web config arrives in FEAT-004).
+    if (WiFiManager::isApMode()) return;
+
+    if (Config.identity.role == 1) {
+        Gateway::loop();
+    } else {
+        Node::loop();
     }
 }

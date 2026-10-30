@@ -4,6 +4,9 @@
 #include <Arduino.h>
 #include <vector>
 
+// Firmware version, reported in the MQTT health.fw field by both roles.
+#define EWS_FW_VERSION "0.1.0"
+
 // EWS T-Beam configuration. Mirrors the CA2RXU style: nested config classes held
 // by a single Configuration object, loaded from /ews_conf.json on SPIFFS with a
 // needsRewrite migration + ESP.restart() pattern. All APRS/beacon/digi fields are

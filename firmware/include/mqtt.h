@@ -32,6 +32,15 @@ namespace MQTT_Utils {
     void onSirenCmd(SirenCmdCallback cb);            // register inbound siren/cmd handler
 
     String baseTopic();                              // yg2ufh/ews/<kabupaten>/<nodeId>
+
+    // ---- Gateway-side helpers -------------------------------------------
+    // The gateway relays data for OTHER nodes, so it needs to publish/subscribe
+    // against an arbitrary node base topic (yg2ufh/ews/<kab>/<nodeId>) built from
+    // the node's own kabupaten + id, not the gateway's identity.
+    String nodeBaseTopic(const String& kabupaten, const String& nodeId);
+    void   publishTo(const String& topic, const String& payload, bool retained);
+    void   subscribe(const String& topic);           // raw subscribe (e.g. node siren/cmd)
+    void   onRawMessage(void (*cb)(const String& topic, const String& payload));
 }
 
 #endif // MQTT_H

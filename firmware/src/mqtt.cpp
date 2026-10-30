@@ -12,6 +12,7 @@ namespace {
     WiFiClient wifiClient;
     PubSubClient client(wifiClient);
     MQTT_Utils::SirenCmdCallback sirenCb = nullptr;
+    void (*rawCb)(const String& topic, const String& payload) = nullptr;
 
     String b;   // cached base topic, built in setup()
 
@@ -35,6 +36,11 @@ namespace {
 
         if (t == tSirenCmd() && sirenCb) {
             sirenCb(msg);
+        }
+
+        // Gateway relays siren/cmd for arbitrary node topics via the raw hook.
+        if (rawCb) {
+            rawCb(t, msg);
         }
     }
 }
@@ -111,6 +117,24 @@ namespace MQTT_Utils {
 
     void onSirenCmd(SirenCmdCallback cb) {
         sirenCb = cb;
+    }
+
+    String nodeBaseTopic(const String& kabupaten, const String& nodeId) {
+        return "yg2ufh/ews/" + kabupaten + "/" + nodeId;
+    }
+
+    void publishTo(const String& topic, const String& payload, bool retained) {
+        if (!client.connected()) return;
+        client.publish(topic.c_str(), payload.c_str(), retained);
+    }
+
+    void subscribe(const String& topic) {
+        if (!client.connected()) return;
+        client.subscribe(topic.c_str());
+    }
+
+    void onRawMessage(void (*cb)(const String& topic, const String& payload)) {
+        rawCb = cb;
     }
 
 }
