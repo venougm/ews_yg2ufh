@@ -1,0 +1,24 @@
+{
+  "id": "FEAT-002",
+  "type": "feat",
+  "description": "Transport layer: the LoRa compact packet codec, the RadioLib SX1276 radio driver, and the PubSubClient MQTT client with EWS topics + Last Will. Depends on FEAT-001 (config struct, board_pinout.h, wifi_manager). No APRS prefix on LoRa; MQTT payloads are native JSON. This feature wires NOTHING into main's loop yet beyond init — role logic that USES these lands in FEAT-003.",
+  "status": "completed",
+  "steps": [
+    "Write include/ews_packet.h + src/ews_packet.cpp: struct EwsPacket {String networkId,nodeId; uint32_t seq; String msgType; plus optional group fields}; buildData()/buildJoin()/buildAck()/buildCmd() serialize the compact minimal-JSON per plan.md (header n/d/s/t; DATA short keys w{t,h,p}, pw{bv,pv,soc}, ti{x,y,dl}, r{mm}, g{la,lo,fx}, kab, kec; JOIN adds prov + sen[]; CMD adds cmd+val); parse(const String&, EwsPacket&) deserializes. Put the full format spec in the header comment and a `// TODO: can become packed binary later`.",
+    "Write include/lora.h + src/lora.cpp: `SX1276 radio = new Module(RADIO_CS_PIN, RADIO_DIO0_PIN, RADIO_RST_PIN)`; SPI.begin(RADIO_SCK_PIN,RADIO_MISO_PIN,RADIO_MOSI_PIN,RADIO_CS_PIN); setup() applies Config.lora freq/sf/cr/bw/power/syncWord and optional CAD, calls radio.begin(freq) with error check, setDio0Action(ISR, RISING), startReceive(); transmit(const String& payload) with NO APRS prefix; a flag-driven receive() returning payload + getRSSI()/getSNR(). Mirror c:\\aws-kiro\\firm\\src\\lora_utils.cpp minus the APRS prefix/blacklist.",
+    "Write include/mqtt.h + src/mqtt.cpp: PubSubClient over WiFiClient; setBufferSize(1024); topic builders using Config.identity.kabupaten + nodeId (base yg2ufh/ews/<kab>/<id>/...); connect() with clientId (+user/pass if set) and Last Will on .../status = 'offline' retained; publishData(const String& json) to .../data retained=false; publishStatus(const char*) to .../status retained; publishSirenState(const char*) to .../siren/state retained; subscribe .../siren/cmd with a callback hook; loop(). The gateway id is used for siren topics.",
+    "Add minimal init calls in src/main.cpp: construct the LoRa and MQTT objects and call LoRa setup() in STA mode (after AXP). Do not add role behavior yet; keep loop building.",
+    "Run the build and fix any errors until green."
+  ],
+  "acceptance_criteria": [
+    "ews_packet build* functions produce single-line JSON with header keys n/d/s/t and parse() round-trips a DATA and a JOIN packet (reasoned in code; compile-level correctness).",
+    "lora.cpp constructs SX1276 with (CS, DIO0, RST) and transmits WITHOUT the \\x3c\\xff\\x01 APRS prefix.",
+    "mqtt.cpp sets a Last Will of 'offline' retained on the status topic and uses setBufferSize>=1024.",
+    "`python -m platformio run -e ttgo-t-beam-ews` compiles with 0 errors (RadioLib + PubSubClient + ArduinoJson all link)."
+  ],
+  "verification": [
+    "python -m platformio run -e ttgo-t-beam-ews -d c:\\aws-kiro\\EWS_YG2UFH\\.worktrees\\ews-firmware\\firmware  -> SUCCESS, 0 errors."
+  ],
+  "blocked_reason": null,
+  "findings": "DONE, BUILD GREEN. ews_packet (buildData/buildJoin/buildAck/buildCmd + parse) emits single-line compact JSON with header n/d/s/t; DATA+JOIN carry kab/kec/kel slugs (kelurahan is payload metadata, never in the MQTT topic). lora.cpp uses SX1276 = new Module(CS,DIO0,RST) with NO APRS prefix (byte-buffer transmit overload because RadioLib transmit(String&) takes a non-const ref). mqtt.cpp sets setBufferSize(1024) and a retained 'offline' Last Will on the status topic; base topic yg2ufh/ews/<kabupaten>/<nodeId>. Build fix: added -D RADIOLIB_EXCLUDE_RFM2X=1 (RadioLib 7.8.1 aliases RFM22/23 to the already-excluded Si443x). Re-verified in the convergence pass: SUCCESS, 0 errors."
+}

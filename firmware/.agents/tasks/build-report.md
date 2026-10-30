@@ -1,5 +1,59 @@
 # Build Report — EWS T-Beam firmware
 
+## Convergence / full integration pass (feat-001..004) — LATEST
+
+Command:
+`python -m platformio run -e ttgo-t-beam-ews -d c:\aws-kiro\EWS_YG2UFH\.worktrees\ews-firmware\firmware`
+
+Result: **SUCCESS, 0 errors.**
+
+- RAM:   3.7% (48336 / 1310720 bytes)
+- Flash: 51.3% (1009165 / 1966080 bytes)
+- Took ~10.6 s (incremental; deps already cached).
+
+Dependency graph linked cleanly: RadioLib 7.8.1, ArduinoJson 7.4.3,
+PubSubClient 2.8.0, Adafruit BME280 2.3.0 / Unified Sensor 1.1.15 / ADS1X15 2.6.2
+/ SSD1306 2.5.17 / GFX 1.13.0, ModbusMaster 2.0.1, XPowersLib 0.2.9,
+TinyGPSPlus 1.1.0, plus core SPIFFS/Wire/SPI/WiFi/WebServer.
+
+No code changes were required this pass — the whole firmware (FEAT-001..004)
+already compiles clean. The four acceptance points were re-verified against the
+source:
+
+- (a) `kelurahan` IN the config schema (`Identity.kelurahan`, configuration.h) and
+  flows node -> gateway -> MQTT as PAYLOAD METADATA, never in the topic:
+  * node.cpp fills `kel` into both the compact DATA packet (`fillCompact`) and
+    the JOIN packet (`sendJoin`), and `kelurahan` into the direct fat JSON.
+  * ews_packet.cpp carries `kel` on DATA + JOIN; ews_packet.h documents it as
+    "payload metadata only; NOT part of the MQTT topic".
+  * gateway.cpp `expandToFatJson` emits `doc["kelurahan"]` (packet value, else
+    JOIN-table fallback).
+  * mqtt.cpp topic base = `yg2ufh/ews/<kabupaten>/<nodeId>` — kabupaten + node_id
+    ONLY; kelurahan never enters the topic.
+- (b) Web config uses CASCADING wilayah dropdowns storing SLUGS, loaded from
+  data/wilayah.json via GET /api/wilayah, mirroring docs/mockup/device-setup.html:
+  * data/script.js: fillProv -> fillKab -> fillKec -> fillKel; each <option>
+    shows the display name, `value` = lowercase slug; `gather()` submits
+    `$('selProv/Kab/Kec/Kel').value` (slugs); `populate()` pre-selects stored
+    slugs. web_config.cpp serves /wilayah.json + /api/wilayah verbatim from SPIFFS.
+  * data/index.html IDs (selProv/selKab/selKec/selKel + all field IDs) match
+    script.js and the mockup section layout (Peran, Identitas+Lokasi, WiFi, MQTT,
+    LoRa, Sensor, Sirine, Lanjutan).
+  * data/wilayah.json seeds the same DIY sample as the mockup; it additionally
+    stores explicit kelurahan slugs (e.g. "ngorooro" for "Ngoro-oro") rather than
+    deriving them client-side — more robust for production, same displayed names.
+- (c) README.md documents the esp-web-tools MERGED-BINARY build output: an
+  `esptool merge_bin` recipe producing `firmware-merged.bin` + a minimal
+  `manifest.json` consumed by esp-web-tools, plus the optional buildfs/spiffs.bin
+  note for embedding the SPIFFS web UI.
+- (d) Siren is MANUAL-ONLY: siren.cpp has a prominent invariant banner; `setSiren()`
+  is reached only from `handleCmd()`, which is invoked only by the MQTT siren/cmd
+  callback (node.cpp + gateway.cpp). No sensor/threshold path actuates the relay;
+  tilt SIAGA/AWAS only flag status in the payload. Relay starts de-energized.
+
+---
+
+
 ## FEAT-002 (transport layer) — items 4, 5, 6, 7
 
 Command:
