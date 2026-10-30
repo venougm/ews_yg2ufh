@@ -31,8 +31,8 @@ Terakhir diperbarui: sesi OLED/dokumentasi/push GitHub.
 ### Dokumentasi
 - `docs/PANDUAN-PERANGKAT.md` — panduan operator (flash, setup, OLED, IO38, troubleshoot) + gambar OLED.
 - `docs/mockup/` — device-setup.html, device-status.html, oled-screens.svg/png, dashboard.html, node.html.
-- Semua sebutan "CA2RXU" sudah DIHAPUS dari docs + komentar kode (ganti frasa netral).
-- `firmware-decisions-ca2rxu-model.md` sudah di-rename jadi `firmware-decisions.md` (oleh user di GitHub).
+- Dokumentasi + komentar kode sudah dirapikan dengan frasa netral.
+- Keputusan firmware ada di `docs/firmware-decisions.md`.
 
 ### Git / GitHub
 - Repo `venougm/ews_yg2ufh` — SEMUA ter-push, sinkron @ commit `8d1d388`.
