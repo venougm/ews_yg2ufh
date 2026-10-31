@@ -213,4 +213,28 @@ namespace Gateway {
 
         checkMissing();
     }
+
+    // Read-only snapshot for the OLED display (additive; no transport change).
+    GatewayStatus status() {
+        GatewayStatus s;
+        s.nodeCount  = (int)nodes.size();
+        s.rxTotal    = LoRa_Utils::rxCount();
+        s.txTotal    = LoRa_Utils::txCount();
+        s.sirenOn    = Siren_Utils::isSirenOn();   // READ ONLY — never set here
+        s.lastNodeId = "";
+        s.lastAgeSec = 0;
+
+        // Pick the node heard most recently (largest lastSeen).
+        unsigned long newest = 0;
+        for (auto& n : nodes) {
+            if (n.lastSeen >= newest) {
+                newest       = n.lastSeen;
+                s.lastNodeId = n.nodeId;
+            }
+        }
+        if (s.lastNodeId != "" && newest != 0) {
+            s.lastAgeSec = (uint32_t)((millis() - newest) / 1000UL);
+        }
+        return s;
+    }
 }

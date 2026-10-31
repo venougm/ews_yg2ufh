@@ -18,6 +18,12 @@ namespace {
     volatile bool operationDone = true;
     bool transmitFlag = true;   // true after a TX (or at boot) so receive() re-arms RX
 
+    // Display counters (additive, no effect on TX/RX logic).
+    uint32_t txCounter = 0;
+    uint32_t rxCounter = 0;
+    int      lastRssiVal = 0;
+    float    lastSnrVal = 0;
+
     IRAM_ATTR void setFlag() {
         operationDone = true;
     }
@@ -74,6 +80,7 @@ namespace LoRa_Utils {
         operationDone = false;
 
         if (state == RADIOLIB_ERR_NONE) {
+            txCounter++;
             Serial.print("---> LoRa Tx: ");
             Serial.println(payload);
             return true;
@@ -102,6 +109,9 @@ namespace LoRa_Utils {
             rx.payload = packet;
             rx.rssi    = (int)radio.getRSSI();
             rx.snr     = radio.getSNR();
+            rxCounter++;
+            lastRssiVal = rx.rssi;
+            lastSnrVal  = rx.snr;
             Serial.print("<--- LoRa Rx: ");
             Serial.println(packet);
             Serial.printf("(RSSI:%d / SNR:%.1f)\n", rx.rssi, rx.snr);
@@ -111,5 +121,11 @@ namespace LoRa_Utils {
         radio.startReceive();
         return rx;
     }
+
+    // ---- Display data sources (additive) --------------------------------
+    uint32_t txCount() { return txCounter; }
+    uint32_t rxCount() { return rxCounter; }
+    int      lastRssi() { return lastRssiVal; }
+    float    lastSnr()  { return lastSnrVal; }
 
 }

@@ -111,6 +111,7 @@ void loop() {
     // In AP mode run only the web config server (service HTTP + handle reboot).
     if (WiFiManager::isApMode()) {
         WebConfig::loop();
+        DisplayUtils::loop();   // keep the AP_SETUP page alive
         return;
     }
 
@@ -119,4 +120,7 @@ void loop() {
     } else {
         Node::loop();
     }
+
+    // Drive the OLED page rotation + timeout blanking (no-op when disabled).
+    DisplayUtils::loop();
 }

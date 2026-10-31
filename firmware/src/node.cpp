@@ -21,6 +21,8 @@ namespace {
 
     unsigned long lastSend = 0;
     uint32_t      seq      = 0;
+    SensorReading lastReading;      // cached for Node::status() (display source)
+    bool          lastViaWifi = false;
 
     // Build the compact on-air DATA packet from a reading, enabling only the
     // sensor groups that are present.
@@ -134,14 +136,17 @@ namespace {
 
     void sendReading() {
         SensorReading r = Sensors_Utils::readEnabled();
+        lastReading = r;    // cache the latest reading for the display
 
         // Prefer the direct MQTT path when the network is available.
         if (WiFiManager::isConnected() && MQTT_Utils::isConnected()) {
+            lastViaWifi = true;
             MQTT_Utils::publishData(buildFatJson(r));
             return;
         }
 
         // Fallback: compact DATA packet over LoRa to the gateway.
+        lastViaWifi = false;
         EwsPacket p;
         fillCompact(p, r);
         LoRa_Utils::transmit(EwsPacketCodec::buildData(p));
@@ -173,5 +178,19 @@ namespace Node {
             sendReading();
             lastSend = millis();
         }
+    }
+
+    // Read-only snapshot for the OLED display (additive; no transport change).
+    NodeStatus status() {
+        NodeStatus s;
+        s.seq     = seq;
+        s.viaWifi = WiFiManager::isConnected() && MQTT_Utils::isConnected();
+        s.reading = lastReading;
+
+        unsigned long intervalMs = (unsigned long)Config.sensors.intervalSec * 1000UL;
+        unsigned long nextAt     = lastSend + intervalMs;
+        unsigned long now        = millis();
+        s.secsToNext = (now >= nextAt) ? 0 : (int)((nextAt - now) / 1000UL);
+        return s;
     }
 }

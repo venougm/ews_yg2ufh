@@ -12,6 +12,11 @@ namespace WiFiManager {
     void checkWiFi();       // reconnect attempt every ~30s when in STA mode
     bool isConnected();
     bool isApMode();
+
+    // ---- Display data sources (additive, const-correct) -----------------
+    String getIP();         // WiFi.localIP().toString() when connected, else ""
+    int    getRSSI();       // WiFi.RSSI() when connected, else 0
+    String apSsid();        // AP SSID: "EWS-"+nodeId, else "YG2UFH-EWS-Setup"
 }
 
 #endif // WIFI_MANAGER_H

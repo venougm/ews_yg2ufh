@@ -37,6 +37,7 @@
 #define RS485_DERE_PIN    4
 #define DFPLAYER_TX_PIN   2
 #define DFPLAYER_RX_PIN   15
+#define BTN_USER_PIN      38   // T-Beam USER button, active-low (internal/external pull-up)
 
 // ---- MCP23017 bit map (port A = 0..7, port B = 8..15) ----
 #define MCP_LED_POWER   0   // GPA0

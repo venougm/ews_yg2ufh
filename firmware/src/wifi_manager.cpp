@@ -18,11 +18,6 @@ namespace {
         }
         return false;
     }
-
-    String apSsid() {
-        if (Config.identity.nodeId != "") return "EWS-" + Config.identity.nodeId;
-        return "YG2UFH-EWS-Setup";
-    }
 }
 
 namespace WiFiManager {
@@ -94,6 +89,23 @@ namespace WiFiManager {
 
     bool isApMode() {
         return apMode;
+    }
+
+    // ---- Display data sources (additive) --------------------------------
+    String getIP() {
+        if (WiFi.status() != WL_CONNECTED) return "";
+        return WiFi.localIP().toString();
+    }
+
+    int getRSSI() {
+        if (WiFi.status() != WL_CONNECTED) return 0;
+        return WiFi.RSSI();
+    }
+
+    // Same SSID logic the AP uses, exposed so the display shows the exact SSID.
+    String apSsid() {
+        if (Config.identity.nodeId != "") return "EWS-" + Config.identity.nodeId;
+        return "YG2UFH-EWS-Setup";
     }
 
 }

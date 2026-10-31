@@ -19,6 +19,12 @@ namespace LoRa_Utils {
     void setup();                           // SPI + radio.begin + RF params from Config + start RX
     bool transmit(const String& payload);   // TX with NO APRS prefix; returns true on success
     LoRaRx receive();                        // flag-driven RX; .valid=false when nothing pending
+
+    // ---- Display data sources (additive, const-correct) -----------------
+    uint32_t txCount();                      // successful transmits since boot
+    uint32_t rxCount();                      // valid receives since boot
+    int      lastRssi();                     // RSSI (dBm) of the last valid RX
+    float    lastSnr();                      // SNR (dB) of the last valid RX
 }
 
 #endif // LORA_H

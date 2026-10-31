@@ -14,9 +14,20 @@
 //   - siren/cmd: subscribe to node siren topics and forward the command to the
 //              local siren (handleCmd) + publish siren/state.
 // Health fields (rssi/snr/uptime/fw) are attached to each relayed reading.
+// Snapshot of gateway state for the OLED display (additive, read-only).
+struct GatewayStatus {
+    int      nodeCount;     // number of registered nodes
+    uint32_t rxTotal;       // LoRa_Utils::rxCount()
+    uint32_t txTotal;       // LoRa_Utils::txCount()
+    String   lastNodeId;    // id of the most recently heard node ("" if none)
+    uint32_t lastAgeSec;    // seconds since that node was last heard
+    bool     sirenOn;       // Siren_Utils::isSirenOn() (READ ONLY)
+};
+
 namespace Gateway {
     void setup();   // register MQTT callbacks, subscribe to siren/cmd
     void loop();    // service LoRa RX, MQTT, and node-missing detection
+    GatewayStatus status();     // display data source (read-only snapshot)
 }
 
 #endif // GATEWAY_H
