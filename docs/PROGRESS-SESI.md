@@ -44,7 +44,15 @@ Terakhir diperbarui: sesi OLED/dokumentasi/push GitHub.
 
 ## 🔜 BELUM / LANGKAH BERIKUT
 
-### 1. Implementasi OLED + tombol IO38 (SUDAH disepakati, tinggal bangun)
+### 1. ✅ SELESAI — Implementasi OLED + tombol IO38 (merged ke main @ aa209c5)
+Build hijau (Flash 51.8%, RAM 3.7%), reviewer APPROVED 0 findings, ter-push + worktree dibersihkan.
+- display.cpp 8 halaman (boot, AP setup, GW A/B, Node A/B, alarm, transisi) + auto-rotate ~4s + timeout.
+- Getter additif: WiFiManager getIP/getRSSI/apSsid, LoRa tx/rx counter + lastRssi/snr, Node::status(), Gateway::status(), MQTT isConnected.
+- Tombol USER GPIO38 (active-low) tahan 3s → NVS forceAp flag + ESP.restart() → mode AP (WebConfig). AP_CONFIG_TIMEOUT_MS=300000 (5 menit balik client; first-boot exempt).
+- Sirine tetap MANUAL-ONLY (display cuma baca isSirenOn). File baru: include/forceap.h.
+- CATATAN: showAlarm() render-only, belum dipanggil (ada TODO) — alarm plumbing bisa disambung nanti.
+
+### (lama) Implementasi OLED + tombol IO38 — detail desain
 Keputusan final (lihat PANDUAN-PERANGKAT.md §5 + mockup oled-screens.png):
 - `display.cpp` saat ini MASIH minimal (cuma showStatus 1 baris). Perlu dibangun multi-halaman.
 - 6 layar: Boot, Mode AP (SSID/pass/192.168.4.1), Gateway A (WiFi/MQTT/IP/nodes/Rx-Tx) + B
