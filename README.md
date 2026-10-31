@@ -51,3 +51,16 @@ Wilayah: **Yogyakarta, Kabupaten Sleman**.
 - `backend/` — backend dashboard FastAPI (port 8001, MQTT ingest, SQLite).
 - `webflasher/` — web flasher ber-branding YG2UFH (ESP Web Tools), host di GitHub Pages.
 - `docs/` — dokumentasi + mockup (web config, status, OLED).
+
+## Lisensi
+
+Software & firmware di repo ini dirilis dengan lisensi **MIT** — bebas dipakai,
+diubah, dan disebarkan (termasuk untuk keperluan komersial), cukup sertakan
+pemberitahuan hak cipta. Disediakan APA ADANYA tanpa jaminan. Lihat [LICENSE](LICENSE).
+
+Desain PCB (hardware) ada di repo terpisah
+[`ews-tbeam-mainboard`](https://github.com/venougm/ews-tbeam-mainboard) dengan
+lisensi hardware terbuka **CERN-OHL-P**.
+
+Semoga bermanfaat. Project ini gratis dan terbuka untuk membantu lebih banyak
+daerah membangun sistem peringatan dini. 73 de YG2UFH.
